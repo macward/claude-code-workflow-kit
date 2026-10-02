@@ -46,7 +46,39 @@
       "CLAUDE.md SWIFT.md",
       "CLAUDE.md Structure for iOS Projects.md"
     ],
-    "swiftlint": "swiftlint.yml"
+    "swiftlint": "swiftlint.yml",
+    "hooks": [
+      {
+        "id": "lintOnEdit",
+        "title": "Lint on edit",
+        "summary": "Runs swiftlint on every Swift file Claude edits and reports violations to Claude.",
+        "event": "PostToolUse",
+        "matcher": "Edit|MultiEdit|Write",
+        "script": "hooks/swiftlint-on-edit.sh"
+      },
+      {
+        "id": "blockDangerousCommands",
+        "title": "Block dangerous commands",
+        "summary": "Refuses `rm -rf /`, `git push --force` and `git reset --hard` before they run.",
+        "event": "PreToolUse",
+        "matcher": "Bash",
+        "script": "hooks/block-dangerous-commands.sh"
+      }
+    ],
+    "hookDefaults": {
+      "iOSApp": [
+        "lintOnEdit",
+        "blockDangerousCommands"
+      ],
+      "macOSApp": [
+        "lintOnEdit",
+        "blockDangerousCommands"
+      ],
+      "swiftPackage": [
+        "lintOnEdit",
+        "blockDangerousCommands"
+      ]
+    }
   },
   "python": {
     "rules": [
@@ -57,6 +89,39 @@
         "Coding Rules.md"
       ]
     },
-    "guides": []
+    "guides": [],
+    "hooks": [
+      {
+        "id": "formatOnEdit",
+        "title": "Format on edit",
+        "summary": "Runs `ruff format` on every Python file Claude edits.",
+        "event": "PostToolUse",
+        "matcher": "Edit|MultiEdit|Write",
+        "script": "hooks/ruff-format-on-edit.sh"
+      },
+      {
+        "id": "lintOnEdit",
+        "title": "Lint on edit",
+        "summary": "Runs `ruff check` on every Python file Claude edits and reports violations to Claude.",
+        "event": "PostToolUse",
+        "matcher": "Edit|MultiEdit|Write",
+        "script": "hooks/ruff-check-on-edit.sh"
+      },
+      {
+        "id": "blockDangerousCommands",
+        "title": "Block dangerous commands",
+        "summary": "Refuses `rm -rf /`, `git push --force` and `git reset --hard` before they run.",
+        "event": "PreToolUse",
+        "matcher": "Bash",
+        "script": "hooks/block-dangerous-commands.sh"
+      }
+    ],
+    "hookDefaults": {
+      "pythonCLI": [
+        "formatOnEdit",
+        "lintOnEdit",
+        "blockDangerousCommands"
+      ]
+    }
   }
 }
