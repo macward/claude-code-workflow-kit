@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""PreToolUse hook (matcher: Bash): bloquea el busy-wait polling con el que un
-subagente a veces espera la notificación async de otro Agent que spawneó
-(gates de code-review/goal-check en /meridian-solve-task, o el hijo que
-/meridian-run-plan delega) en vez de terminar el turno.
+"""PreToolUse hook (matcher: Bash): blocks the busy-wait polling a subagent
+sometimes uses to wait for the async notification of another Agent it spawned
+(code-review/goal-check gates in /meridian-solve-task, or the child that
+/meridian-run-plan delegates) instead of ending the turn.
 
-La mecánica correcta vive en "How to wait for the subagent"
-(.claude/skills/meridian-run-plan/SKILL.md): terminar el turno
-sin tool call y retomar cuando llega el <task-notification>. Pollear con
-Bash (`echo waiting`, `sleep N; echo done`) reenvía todo el contexto
-acumulado en cada turno de poll — medido: 48 turnos así en una sola task
-costaron 8.14M tokens de cache_read, el 23% del gasto total de esa task
-(run de "semilla" en pfrm0301, 2026-08-13).
+The correct mechanics live in "How to wait for the subagent"
+(.claude/skills/meridian-run-plan/SKILL.md): end the turn
+with no tool call and resume when the <task-notification> arrives. Polling with
+Bash (`echo waiting`, `sleep N; echo done`) resends all the accumulated context
+on every poll turn — measured: 48 turns like that in a single task
+cost 8.14M cache_read tokens, 23% of that task's total spend
+("seed" run in pfrm0301, 2026-08-13).
 
-Global (no por-proyecto) porque estas skills se invocan desde cualquier
-repo, no solo desde el de meridian.
+Global (not per-project) because these skills are invoked from any
+repo, not just the meridian one.
 """
 import json
 import re
@@ -25,12 +25,12 @@ PATTERN = re.compile(
 )
 
 REASON = (
-    "No pollees con Bash esperando a un subagente — terminá el turno. La "
-    "notificación async del harness te despierta cuando el hijo cierra "
-    '(ver "How to wait for the subagent" en '
-    ".claude/skills/meridian-run-plan/SKILL.md). Medido: 48 "
-    'turnos de "echo waiting" en una sola task costaron 8.14M tokens de '
-    "cache_read, el 23% del gasto total de esa task."
+    "Do not poll with Bash while waiting for a subagent — end the turn. The "
+    "harness async notification wakes you up when the child finishes "
+    '(see "How to wait for the subagent" in '
+    ".claude/skills/meridian-run-plan/SKILL.md). Measured: 48 "
+    'turns of "echo waiting" in a single task cost 8.14M tokens of '
+    "cache_read, 23% of that task's total spend."
 )
 
 

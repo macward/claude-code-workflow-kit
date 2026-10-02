@@ -1,138 +1,138 @@
 # Workflow
 
-Cómo trabajar una feature de punta a punta usando las skills de `claude/`.
+How to work a feature end to end using the skills in this repo.
 
-El README explica **qué** existe. Este documento explica **cómo se usa en la práctica**.
+The README explains **what** exists. This document explains **how it's used in practice**.
 
-## Principio
+## Principle
 
-El output real no es el documento — es una implementación correcta con baja ambigüedad. El documento es solo la herramienta para llegar ahí. Si la feature ya tiene baja ambigüedad sin documento, no escribas uno.
+The real output is not the document — it's a correct implementation with low ambiguity. The document is just the tool to get there. If the feature already has low ambiguity without a document, don't write one.
 
-## Mapa del proceso
+## Process map
 
 ```
-(al empezar la sesión) /meridian-recall
+(at session start) /meridian-recall
                   ↓
-1. (una vez por proyecto) /meridian-init
+1. (once per project) /meridian-init
                   ↓
    ┌────────────────────────────────────────────┐
-   │  ¿Entra en una sesión?                     │
+   │  Does it fit in one session?               │
    └────────────────────────────────────────────┘
-      sí ↓                            no ↓
-   /meridian-task            2. Discovery — profundidad según complejidad
-   (una task, creada            ├─ Nivel 1: /meridian-requirements
-    y resuelta; saltea          └─ Nivel 2: /meridian-spec
-    2, 3 y 4)                          ↓
+      yes ↓                           no ↓
+   /meridian-task            2. Discovery — depth depends on complexity
+   (one task, created           ├─ Level 1: /meridian-requirements
+    and solved; skips           └─ Level 2: /meridian-spec
+    2, 3 and 4)                        ↓
         │                     3. /meridian-task-breakdown
         │                            ↓
-        │                     4. Ejecución
-        │                        ├─ /meridian-solve-task  ← una a una
-        │                        └─ /meridian-run-plan    ← autónomo
+        │                     4. Execution
+        │                        ├─ /meridian-solve-task  ← one by one
+        │                        └─ /meridian-run-plan    ← autonomous
         │                            ↓
         └────────────→ ←─────────────┘
                        ↓
-5. (commit/push/PR: la skill, si hay branch · merge + deploy: manual de Max)
+5. (commit/push/PR: the skill, if on a branch · merge + deploy: manual, by the user)
                   ↓
-6. /meridian-recap  ·  /meridian-cut-release (al cerrar una versión)
+6. /meridian-recap  ·  /meridian-cut-release (when closing a version)
 ```
 
-Toda feature (`feat(...)`) pasa por una de las dos ramas — lo decide el tipo de commit, no el tamaño (Git Policy en `CLAUDE.md`). `fix`, `docs`, `refactor`, `test` y `chore` no llevan task y van derecho al paso 5.
+Every feature (`feat(...)`) goes through one of the two branches — the commit type decides it, not the size (Git Policy in `CLAUDE.md`). `fix`, `docs`, `refactor`, `test` and `chore` don't carry a task and go straight to step 5.
 
 ---
 
-## 0. Empezar la sesión — `/meridian-recall`
+## 0. Start the session — `/meridian-recall`
 
-Al inicio de cualquier sesión no trivial. Carga el contexto de memoria relevante al tema y reconcilia el estado del proyecto contra git local (read-only), marcando lo que quedó stale. Pasá el tema como argumento para que el recall sea semántico: `/meridian-recall <tema>`.
-
----
-
-## 1. Bootstrap del proyecto — `/meridian-init`
-
-Una sola vez por proyecto. Crea la estructura del workspace vibe en el servidor MCP (no toca archivos locales). Si el workspace ya existe, no necesitás correrlo.
+At the start of any non-trivial session. Loads the memory context relevant to the topic and reconciles the project state against local git (read-only), flagging whatever went stale. Pass the topic as an argument so the recall is semantic: `/meridian-recall <topic>`.
 
 ---
 
-## 2. Discovery — elegir el nivel
+## 1. Project bootstrap — `/meridian-init`
 
-La pregunta clave: **¿qué ambigüedad tengo que resolver antes de escribir código?**
+Once per project. Creates the vibe workspace structure on the MCP server (doesn't touch local files). If the workspace already exists, you don't need to run it.
 
-### Nivel 1 — `/meridian-requirements`
+---
 
-Para features simples: UI localizada, CRUD, cambios sin impacto arquitectónico.
+## 2. Discovery — choosing the level
 
-- **Resuelve**: qué debe hacer la feature, acceptance criteria (MoSCoW), edge cases (BDD)
-- **No resuelve**: cómo se implementa, qué módulos toca
-- **Ejemplos**: "agregar export CSV", "modo oscuro", "nuevo filtro en la lista"
-- **Output**: documento en `requirements/` del workspace vibe
+The key question: **what ambiguity do I have to resolve before writing code?**
 
-Si la feature entra en una sesión, saltate este paso y el breakdown: andá directo a `/meridian-task`, que crea la task y la resuelve. Si es un `fix`, `docs`, `refactor`, `test` o `chore`, no lleva task — implementá y ya.
+### Level 1 — `/meridian-requirements`
 
-Lo que **no** es una opción es una feature nueva sin task: era la salida que ofrecía este documento ("o incluso a implementar") y es la que produjo 12 `feat(...)` sin registro en dos semanas.
+For simple features: localized UI, CRUD, changes with no architectural impact.
 
-### Nivel 2 — `/meridian-spec` (SDD)
+- **Resolves**: what the feature must do, acceptance criteria (MoSCoW), edge cases (BDD)
+- **Doesn't resolve**: how it's implemented, which modules it touches
+- **Examples**: "add CSV export", "dark mode", "new filter in the list"
+- **Output**: document in `requirements/` of the vibe workspace
 
-Para features arquitectónicamente significativas: arquitectura, concurrency, persistence base, protocol design, networking core, lifecycle complejo, state management complejo.
+If the feature fits in one session, skip this step and the breakdown: go straight to `/meridian-task`, which creates the task and solves it. If it's a `fix`, `docs`, `refactor`, `test` or `chore`, it doesn't carry a task — just implement it.
 
-- **Resuelve**: superficie pública, invariantes, constraints duros (auth, seguridad), ambigüedades críticas
-- **Anclado al codebase**: no es teórico, referencia archivos y módulos reales
-- **Sin código**: define interfaces, no implementación
-- **Ejemplos**: "Conversation Memory", "motor de indexación", "sistema de auth base"
-- **Output**: documento en `specs/` del workspace vibe
+What is **not** an option is a new feature without a task: it was the way out this document used to offer ("or even implement") and it's the one that produced 12 `feat(...)` with no record in two weeks.
 
-### Regla práctica
+### Level 2 — `/meridian-spec` (SDD)
 
-Si dudás entre dos niveles, elegí el más liviano. Subir cuesta poco; bajar significa que escribiste un documento inflado para nada.
+For architecturally significant features: architecture, concurrency, base persistence, protocol design, networking core, complex lifecycle, complex state management.
 
-Señales de que elegiste mal:
-- Escribiste un SDD y todas las decisiones eran obvias → un requirements alcanzaba
-- Escribiste requirements y al breakdown no sabías cómo dividir las tasks → faltaba el SDD
+- **Resolves**: public surface, invariants, hard constraints (auth, security), critical ambiguities
+- **Anchored to the codebase**: not theoretical, references real files and modules
+- **No code**: defines interfaces, not implementation
+- **Examples**: "Conversation Memory", "indexing engine", "base auth system"
+- **Output**: document in `specs/` of the vibe workspace
+
+### Rule of thumb
+
+If you're torn between two levels, pick the lighter one. Going up is cheap; going down means you wrote a bloated document for nothing.
+
+Signs you picked wrong:
+- You wrote an SDD and all the decisions were obvious → a requirements doc was enough
+- You wrote requirements and at breakdown you didn't know how to split the tasks → the SDD was missing
 
 ---
 
 ## 3. Task breakdown — `/meridian-task-breakdown`
 
-Toma el documento de discovery y genera tasks concretas en el workspace vibe, con dependencias (`depends_on`) cuando importan.
+Takes the discovery document and generates concrete tasks in the vibe workspace, with dependencies (`depends_on`) when they matter.
 
-Buenas tasks:
-- Una unidad de trabajo cerrada (idealmente un commit)
-- Independientes cuando se pueda; con `depends_on` cuando hay orden real
-- Con criterio de "done" claro
+Good tasks:
+- A closed unit of work (ideally one commit)
+- Independent when possible; with `depends_on` when there's a real order
+- With a clear "done" criterion
 
-Si después de hacer breakdown ves que las tasks salen vagas o gigantes, probablemente el documento de discovery se quedó corto — subí un nivel y reescribilo.
+If after the breakdown the tasks come out vague or gigantic, the discovery document probably fell short — go up a level and rewrite it.
 
 ---
 
-## 4. Ejecución
+## 4. Execution
 
-### `/meridian-solve-task` — una a una
+### `/meridian-solve-task` — one by one
 
-Para trabajar una task sola. **Corre dentro de un subagente**: en tu contexto queda sólo el reporte final, no el proceso. Con `--inline` corre a la vista, con canal abierto — el escape hatch para una task riesgosa que querés mirar de cerca.
+For working a single task. **Runs inside a subagent**: only the final report lands in your context, not the process. With `--inline` it runs in plain sight, with an open channel — the escape hatch for a risky task you want to watch closely.
 
-1. Toma la siguiente task pendiente (o la que le pases por número)
-2. Implementa, corre tests
-3. Simplifica el diff de la task (`/simplify`) y re-corre los tests — última mutación del código
-4. Code review con `code-review-expert`; arregla blockers si los hay
-5. Verifica los acceptance criteria con un verificador independiente
-6. Marca la task `done` y enriquece el timeline
+1. Takes the next pending task (or the one you pass by number)
+2. Implements, runs tests
+3. Simplifies the task's diff (`/simplify`) and re-runs the tests — last mutation of the code
+4. Code review with `code-review-expert`; fixes blockers if any
+5. Verifies the acceptance criteria with an independent verifier
+6. Marks the task `done` and enriches the timeline
 7. **Commits** (with the `Task: <id>` trailer) on the current branch, always. Pushes only when invoked on its own on a working branch: never on `<base_branch>`, and never under `/meridian-run-plan`, which pushes once at the end of the run. Never opens a PR or merges.
 
-Los pasos 4 y 5 son gates de juicio (LLM opinando sobre el código). Corren *después* de la simplificación a propósito: así leen el código que se va a commitear y no uno intermedio.
+Steps 4 and 5 are judgment gates (an LLM giving its opinion on the code). They run *after* the simplification on purpose: that way they read the code that will be committed, not an intermediate one.
 
-Ideal cuando querés revisar cada paso o la feature tiene riesgo.
+Ideal when you want to review each step or the feature is risky.
 
-### `/meridian-run-plan` — autónomo
+### `/meridian-run-plan` — autonomous
 
-Itera todas las tasks pendientes, llamando `/meridian-solve-task` por cada una y respetando `depends_on`.
+Iterates over all pending tasks, calling `/meridian-solve-task` for each one and respecting `depends_on`.
 
-- Por defecto: autónomo (no para entre tasks)
-- Si pedís "step-by-step" o "confirmar": pausa antes de cada task
-- **Cada task queda commiteada** al terminarla, sobre la branch actual: un commit por task con su trailer `Task: <id>`. Lo hace `/meridian-solve-task`, igual que invocada sola; run-plan lo verifica y corta el run si falta. No es opcional — sin commit el working tree queda sucio y la task siguiente no arranca
-- **Pushea una vez al final** si la branch del run no es `<base_branch>`. Sobre la base no pushea: deja los N commits locales para que dispares vos
-- **Abre el PR contra la base** al cerrar un run completo sobre una branch (salvo `--no-pr`). **No mergea ni deploya**: eso es de Max
+- By default: autonomous (doesn't stop between tasks)
+- If you ask for "step-by-step" or "confirm": pauses before each task
+- **Every task is committed** when it finishes, on the current branch: one commit per task with its `Task: <id>` trailer. `/meridian-solve-task` does it, same as when invoked on its own; run-plan verifies it and stops the run if it's missing. It's not optional — without a commit the working tree stays dirty and the next task doesn't start
+- **Pushes once at the end** if the run's branch is not `<base_branch>`. On the base it doesn't push: it leaves the N commits local for you to trigger
+- **Opens the PR against the base** when closing a complete run on a branch (unless `--no-pr`). **Doesn't merge or deploy**: that's the user's
 
-Ideal cuando el plan está sólido y querés dejarlo correr.
+Ideal when the plan is solid and you want to let it run.
 
-**Si el run se corta a mitad —contexto lleno, sesión muerta— volvé a invocarlo y sigue.** Los runs largos son la norma y el contexto es finito, así que esto va a pasar. No hay nada que rescatar a mano: el trabajo de cada task completada ya está commiteado y su task está `done` en Meridian, y la cola se reconstruye desde `list_tasks` en cada invocación. Lo único que se pierde es la narrativa del run anterior, que está en `git log`.
+**If the run is cut off midway —context full, session dead— invoke it again and it picks up.** Long runs are the norm and context is finite, so this will happen. There's nothing to rescue by hand: the work of every completed task is already committed and its task is `done` in Meridian, and the queue is rebuilt from `list_tasks` on every invocation. The only thing lost is the narrative of the previous run, which is in `git log`.
 
 ---
 
@@ -140,18 +140,18 @@ Ideal cuando el plan está sólido y querés dejarlo correr.
 
 The criterion is **not** "who presses the button", it's **where the irreversible line is**. A local commit is reversible; a merge into the base branch and a deploy are not. The branch is what separates one from the other, so it's the branch —not ceremony— that decides how far a skill goes.
 
-**`<base_branch>`** is the integration branch the project's CLAUDE.md declares in `branch:`. In Meridian it's `main`, but skills **compare against that value, never against the literal `main`** — in a project whose base is `master`, hardcoding `main` would make the skill read the base as "isolated branch, I can push" and publish exactly where it shouldn't.
+**`<base_branch>`** is the integration branch the project's CLAUDE.md declares in `branch:`. Typically it's `main`, but skills **compare against that value, never against the literal `main`** — in a project whose base is `master`, hardcoding `main` would make the skill read the base as "isolated branch, I can push" and publish exactly where it shouldn't.
 
 | | commit | push | PR | merge | deploy | delete branch |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
-| **On a working branch** (the feature's worktree) | skill ✓ | skill ✓ | skill ✓ | **Max** | **Max** | **Max** |
-| **On `<base_branch>`** | skill ✓ | **Max** | — | — | **Max** | — |
+| **On a working branch** (the feature's worktree) | skill ✓ | skill ✓ | skill ✓ | **User** | **User** | **User** |
+| **On `<base_branch>`** | skill ✓ | **User** | — | — | **User** | — |
 | **Unattended** (`/schedule`, `/loop`) | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
 
-- **On a branch, a skill goes as far as the PR.** Committing, pushing and opening the PR is mechanical work: stopping there for Max to do it by hand adds friction, not safety. The real gate is the merge.
+- **On a branch, a skill goes as far as the PR.** Committing, pushing and opening the PR is mechanical work: stopping there for the user to do it by hand adds friction, not safety. The real gate is the merge.
 - **On `<base_branch>`, a skill commits but doesn't push.** The deploy is a manual runbook, but it ships whatever is on `origin/<base_branch>`: pushing the base releases those commits to the next deploy. Committing there is local and reversible; pushing isn't. That's why the line falls between the two.
 - **If `<base_branch>` can't be determined, fail closed:** don't push. When in doubt, the safe option is the one that doesn't publish.
-- **Nobody merges, deploys or deletes branches automatically.** Not on a branch, not on the base. Deleting a merged branch is Max's, at merge time.
+- **Nobody merges, deploys or deletes branches automatically.** Not on a branch, not on the base. Deleting a merged branch is the user's, at merge time.
 - **An unattended routine doesn't touch git at all** — not even a local commit. It ends in "artifacts ready for review". See `CLAUDE.md` › Unattended automation.
 
 And the shape rules that don't depend on the branch:
@@ -160,58 +160,58 @@ And the shape rules that don't depend on the branch:
 - **No published branch per task.** A plan of N tasks produces N commits on the feature branch. A task may only get a temporary local branch that is never pushed.
 - **A multi-task plan on `<base_branch>` asks first**: it's a feature landing without a PR.
 - **Every commit that completes a task carries the `Task: <id>` trailer** (consumed by `scripts/mark_deployed.sh` at deploy time to move the task to `deployed`).
-- **`claude/` changes are `chore(claude)`, never `feat`**, so they don't need a task.
+- **Changes to this repo's assets are `chore(claude)`, never `feat`**, so they don't need a task.
 
 ---
 
-## 6. Cerrar la sesión / la versión
+## 6. Closing the session / the version
 
 ### `/meridian-recap`
 
-Genera un recap ejecutivo (sin jerga) de lo que se hizo, guarda en `reports/` y actualiza el estado del proyecto para que la próxima sesión retome sin releer todo el código.
+Generates an executive recap (no jargon) of what was done, saves it in `reports/` and updates the project state so the next session picks up without rereading all the code.
 
 ### `/meridian-timeline-note`
 
-Alternativa más liviana: una nota narrativa de 2-4 líneas al feed del timeline (no un documento en `reports/`). Para milestones que no ameritan un recap completo.
+A lighter alternative: a 2-4 line narrative note to the timeline feed (not a document in `reports/`). For milestones that don't warrant a full recap.
 
 ### `/meridian-cut-release`
 
-Cuando una tanda de trabajo deployado amerita cerrar una versión: lee el changelog del release abierto, sugiere el bump SemVer según lo que se shippeó, previsualiza, y tras confirmación humana estampa la versión y corta. Se detiene antes de git/deploy.
+When a batch of deployed work warrants closing a version: reads the open release's changelog, suggests the SemVer bump based on what shipped, previews, and after human confirmation stamps the version and cuts. Stops before git/deploy.
 
 ---
 
-## Patrones de uso
+## Usage patterns
 
-### Feature chica que tenés clara
+### Small feature you have clear
 ```
-/meridian-task "<lo que querés construir>"
+/meridian-task "<what you want to build>"
 ```
-Una task, creada y resuelta de una. Sin documento de discovery y sin breakdown — la ambigüedad ya es baja, y descomponer un solo item es ceremonia. Es el camino que mantiene dentro de Meridian a la feature de una tarde en vez de shippearla sin task detrás.
+One task, created and solved in one go. No discovery document and no breakdown — the ambiguity is already low, and decomposing a single item is ceremony. It's the path that keeps an afternoon's feature inside Meridian instead of shipping it with no task behind it.
 
-### Feature media
+### Medium feature
 ```
 /meridian-spec → /meridian-task-breakdown → /meridian-run-plan
 ```
-El SDD alinea la superficie y los constraints, run-plan ejecuta.
+The SDD aligns the surface and the constraints, run-plan executes.
 
-### Feature grande / arquitectónica
+### Large / architectural feature
 ```
-/meridian-spec → /meridian-task-breakdown → /meridian-solve-task (una a una)
+/meridian-spec → /meridian-task-breakdown → /meridian-solve-task (one by one)
 ```
-El SDD reduce riesgo, ejecución controlada por la criticidad.
+The SDD reduces risk, execution controlled by criticality.
 
-### Retomar una sesión vieja
+### Resuming an old session
 ```
 /meridian-recall → /meridian-solve-task <NNN>
 ```
-Cargar el contexto y el estado, ver qué quedó pendiente, retomar la próxima.
+Load the context and state, see what's left pending, pick up the next one.
 
 ---
 
-## Anti-patrones
+## Anti-patterns
 
-- **Escribir SDD para todo.** Genera docs gigantes que nadie lee y desincentiva discovery liviano cuando sí hace falta.
-- **Saltarse discovery cuando hay ambigüedad real.** Termina en tasks vagas, refactors a mitad de implementación, y trabajo que se rehace.
-- **Mergear o deployar desde una skill.** Prohibido por política — es el único gate humano real. (Commitear, pushear y abrir el PR **sobre una branch de trabajo** sí los hace una skill; en `<base_branch>`, solo commitear. Ver sección 5.)
-- **Hacer breakdown antes del discovery.** Si las tasks salen vagas, el problema es upstream.
-- **Empezar una sesión sin `/meridian-recall`.** Perdés el estado y las decisiones previas, y arrancás con contexto stale.
+- **Writing an SDD for everything.** Produces giant docs nobody reads and discourages lightweight discovery when it is actually needed.
+- **Skipping discovery when there's real ambiguity.** Ends in vague tasks, mid-implementation refactors, and work that gets redone.
+- **Merging or deploying from a skill.** Forbidden by policy — it's the only real human gate. (Committing, pushing and opening the PR **on a working branch** is done by a skill; on `<base_branch>`, only committing. See section 5.)
+- **Doing the breakdown before discovery.** If the tasks come out vague, the problem is upstream.
+- **Starting a session without `/meridian-recall`.** You lose the state and prior decisions, and start with stale context.

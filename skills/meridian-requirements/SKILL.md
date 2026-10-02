@@ -102,7 +102,7 @@ List of related functionality explicitly excluded from this feature.
   - **The letter groups** scenarios around the same moment or area of the feature (the signup, keeping the profile up to date, a sync's error paths). Each group becomes its own use case list. A single group still uses `A`; open `B` only for a second real group, not to split a short list.
   - **The number orders** within the group, from 1.
 - **IDs are never renumbered.** A new scenario goes last in its group (`A4`); a removed one leaves its gap. The spec and tasks cite scenarios by ID, and the breakdown uses it to recognize a scenario it already materialized — renumbering makes `A2` silently point at another case. Until the breakdown assigns `UC-n`, the ID is the only handle.
-- **Name the scenario as a short noun phrase** — it becomes the use case title a coverage report lists. "Crear una lista vacía", not "El usuario puede crear una lista vacía cuando no hay ninguna".
+- **Name the scenario as a short noun phrase** — it becomes the use case title a coverage report lists. "Create an empty list", not "The user can create an empty list when there is none".
 - **One actor per scenario.** Two actors means two scenarios.
 
 This skill does **not** call `save_use_cases`: it runs before the feature entity exists, so there's nothing to save against. The document is the handoff.
@@ -111,7 +111,7 @@ This skill does **not** call `save_use_cases`: it runs before the feature entity
 
 Run these three controls on the draft **always**, including a "generate and save" request. Fix what you find **in the document itself** — no trace section.
 
-**1. Everything the user asked for is accounted for.** List every concrete thing the user's message named — data, behaviors, constraints, examples ("edad, dónde vive, intereses" is three items, not one idea). Each ends up in:
+**1. Everything the user asked for is accounted for.** List every concrete thing the user's message named — data, behaviors, constraints, examples ("age, where they live, interests" is three items, not one idea). Each ends up in:
 
 - a requirement (MUST/SHOULD/COULD) that names it, or
 - WON'T / Out of scope, **with the reason** it was left out.
@@ -123,7 +123,7 @@ Replacing an item with something close ("birthday" for "age") counts as dropping
 **3. Requirements don't contradict each other, and where they meet, the doc says what happens.** Read in pairs the requirements that touch the same data or moment (what the user says vs. what the system infers, a limit vs. an exception, two flows that can overlap):
 
 - If they contradict, resolve it and keep one.
-- If one wins, say what happens to **the other side too**, in the requirement and in the scenario's Then. "The profile keeps Córdoba" is half an answer when the conversation also said Mendoza: state what becomes of Mendoza.
+- If one wins, say what happens to **the other side too**, in the requirement and in the scenario's Then. "The profile keeps Boston" is half an answer when the conversation also said Denver: state what becomes of Denver.
 
 A prohibition goes in MUST as **MUST NOT** ("Other users MUST NOT be able to see…"); WON'T is scope, not prohibition.
 

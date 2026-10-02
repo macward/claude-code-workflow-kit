@@ -33,8 +33,8 @@ Posting comments on GitHub is an **outward action that doesn't clean itself up**
 - **Never post without explicit OK.** The skill presents the findings in the terminal and waits for confirmation.
 - **Post only blocking and major.** Minor (nits, style) goes in the local summary, not to GitHub.
 - **Never merge, never deploy, never push commits.** This skill only reads and, after OK, comments.
-- **Never fix the code.** At this point it's already committed; if something is wrong, it's reported and Max decides.
-- Unattended (`/schedule`, `/loop`) it may at most present the findings. Posting is triggered by Max.
+- **Never fix the code.** At this point it's already committed; if something is wrong, it's reported and the user decides.
+- Unattended (`/schedule`, `/loop`) it may at most present the findings. Posting is triggered by the user.
 
 ## Setup
 
@@ -129,14 +129,14 @@ If there are no findings, say so and end — don't open empty comments.
 
 ### 5. Close
 
-Report what was posted and what stayed local. Remind that the merge is Max's.
+Report what was posted and what stayed local. Remind that the merge is the user's.
 
 ## Re-execution
 
 It's designed to run several times on the same PR (review → fix → push → review).
 
 - Before posting, read the existing comments (`gh api .../pulls/{n}/comments`) and **don't repeat** an already-commented finding that's still current.
-- If a previous finding is already fixed, mention it in the local summary. Don't resolve threads automatically — Max does that.
+- If a previous finding is already fixed, mention it in the local summary. Don't resolve threads automatically — the user does that.
 
 ## Error handling
 
@@ -154,5 +154,5 @@ It's designed to run several times on the same PR (review → fix → push → r
 - **Only what emerges from combining tasks.** Per-task correctness was already reviewed. Repeating it is noise that buries what matters.
 - **The spec is the criterion, not taste.** The central check is "is this what the SDD said?".
 - **Proposes, doesn't post.** GitHub is outward; the human gate goes before the first comment.
-- **Reports, doesn't fix.** The code is already committed; what to do with a finding is Max's call.
+- **Reports, doesn't fix.** The code is already committed; what to do with a finding is the user's call.
 - **Re-runnable without accumulating noise.** Deduplicate against existing comments.

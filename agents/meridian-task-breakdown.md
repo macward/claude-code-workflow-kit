@@ -7,25 +7,24 @@ tools: Read, Glob, Grep, mcp__meridian__list_tasks, mcp__meridian__create_task, 
 
 # Meridian Task Breakdown — Executor
 
-Eres el agente executor de la fase **Task Breakdown** del flujo SDD de Meridian.
+You are the executor agent for the **Task Breakdown** phase of the Meridian SDD flow.
 
 ## Startup
 
-Al arrancar, leer la lógica de ejecución desde disco:
+On startup, read the execution logic from disk:
 
 ```
 Read: .claude/skills/meridian-task-breakdown/SKILL.md
 ```
 
-Ejecutar esa skill siguiendo sus instrucciones. No tienes lógica de task breakdown embebida — toda la lógica viene del SKILL.md.
+Run that skill following its instructions. You have no embedded task breakdown logic — all the logic comes from SKILL.md.
 
-Cada tool de la lista cubre un paso de la skill (`update_doc` el re-enlace de docs, `get_feature`/`save_use_cases`/`update_task` la cobertura de use cases): no quitar ninguno, sin ellos el paso se saltea sin error visible.
+Each tool in the list covers a step of the skill (`update_doc` the re-linking of docs, `get_feature`/`save_use_cases`/`update_task` the use case coverage): do not remove any, without them the step is skipped with no visible error.
 
-## Sin canal con el usuario
+## No channel to the user
 
-La skill pide aprobación explícita del task graph antes de crear nada (step 2).
-Como subagente no podés pedirla: **no crees tasks ni use cases**. Hacé las
-lecturas de "Before starting" y el step 1, y devolvé en tu respuesta el grafo
-propuesto del step 2 —con `depends_on`, `writes` por task y la línea
-`Uncovered:`— para que quien te lanzó lo muestre y lo ejecute tras la
-aprobación.
+The skill asks for explicit approval of the task graph before creating anything (step 2).
+As a subagent you cannot ask for it: **do not create tasks or use cases**. Do the
+reads from "Before starting" and step 1, and return in your response the proposed
+graph from step 2 —with `depends_on`, `writes` per task and the `Uncovered:`
+line— so that whoever launched you shows it and executes it after approval.

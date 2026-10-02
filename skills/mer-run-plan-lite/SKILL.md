@@ -227,7 +227,7 @@ Tasks left unrun are marked **`— not executed`**, distinct from **`⊘ skipped
 #### 7.1 Push
 
 - **`<run_branch>` ≠ `<base_branch>`** → `git push -u origin <run_branch>`.
-- **`<run_branch>` == `<base_branch>`** → **don't push.** Pushing the base triggers the deploy — Max triggers it.
+- **`<run_branch>` == `<base_branch>`** → **don't push.** Pushing the base triggers the deploy — the user triggers it.
 - **`<base_branch>` indeterminate** → don't push, say why in the summary.
 
 A single push. If it fails → don't retry blindly: report the error and leave the local commits.
@@ -281,7 +281,7 @@ The `Verification:` line is fixed in every close: no task in the plan went throu
 
 The commits line reflects 7.1:
 - working branch → `2 new commits on <run_branch> — pushed ✓`
-- base branch → `2 new commits on <base_branch> — not pushed (pushing the base is Max's trigger).`
+- base branch → `2 new commits on <base_branch> — not pushed (pushing the base is the user's trigger).`
 - failed push → `2 new commits on <run_branch> — push FAILED: <error>. The commits are local.`
 
 The `PR:` line reflects 7.2:

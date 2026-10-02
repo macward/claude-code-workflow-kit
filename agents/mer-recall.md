@@ -45,7 +45,7 @@ git -C <repo> status --porcelain
 
 Check each git-dependent claim of the state **against its own subject**, one claim at a time. A newer commit that doesn't touch the subject proves nothing: never flag a claim just because commits exist after the state's date.
 
-1. Pick out the claims ("uncommitted", "sin commit", "pending commit", "working tree with X", "main at <sha>") and the **subject** each one is about: the files, directories or skill/feature names it names.
+1. Pick out the claims ("uncommitted", "pending commit", "working tree with X", "main at <sha>") and the **subject** each one is about: the files, directories or skill/feature names it names.
 2. Map the subject to paths in the repo (e.g. "skills `analyze-*`" → `skills/analyze-*`). If the claim names no identifiable subject, skip it — don't guess.
 3. Verify against that subject:
    - **"uncommitted" / "pending commit"** → `git -C <repo> status --porcelain -- <paths>`. Still listed (`??` or ` M`) → the claim holds, no flag. Clean → run `git -C <repo> log --oneline -3 -- <paths>`; a commit there is the proof: flag it citing that sha.

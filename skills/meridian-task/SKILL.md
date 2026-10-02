@@ -1,6 +1,6 @@
 ---
 name: meridian-task
-description: "Create a single Meridian task from a natural-language description and solve it — no requirements, spec or breakdown. Use when the user describes something concrete to build now ('agregá X', 'hacé que Y'). Multi-session features go through /meridian-requirements → /meridian-task-breakdown → /meridian-run-plan; an existing task through /meridian-solve-task."
+description: "Create a single Meridian task from a natural-language description and solve it — no requirements, spec or breakdown. Use when the user describes something concrete to build now ('add X', 'make Y happen'). Multi-session features go through /meridian-requirements → /meridian-task-breakdown → /meridian-run-plan; an existing task through /meridian-solve-task."
 ---
 
 # Meridian Task

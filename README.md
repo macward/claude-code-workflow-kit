@@ -4,7 +4,7 @@ Skills, agents, commands, rules, templates and hooks for [Claude Code](https://c
 
 Everything is installed **per project** as symlinks into `<project>/.claude/`, so each repo opts in to exactly what it uses and nothing leaks into every session. The one exception is hooks, which are installed globally (see [Hooks](#hooks-global)).
 
-For **how the workflow is used in practice** (step by step, patterns, anti-patterns), see [`WORKFLOW.md`](./WORKFLOW.md) (Spanish). This README documents **what** exists.
+For **how the workflow is used in practice** (step by step, patterns, anti-patterns), see [`WORKFLOW.md`](./WORKFLOW.md). This README documents **what** exists.
 
 ## Requirements
 

@@ -23,7 +23,7 @@ Name types by the role they play, with full words, never abbreviations (`HomeVie
 
 ### ViewModels
 
-When to use one (apps): see 4 - Uso de ViewModels.
+When to use one (apps): see 4 - Using ViewModels.
 
 - ALWAYS use final class
 - Do NOT import SwiftUI unless strictly necessary for navigation types

@@ -1,10 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-# Los hooks son la excepción a "nada global": se instalan en ~/.claude/hooks/,
-# no por proyecto. Solo crea los symlinks; registrarlos en ~/.claude/settings.json
-# es manual. El symlink hereda el modo del target, así que el bit ejecutable vive
-# en el archivo del repo.
+# Hooks are the exception to "nothing global": they are installed in ~/.claude/hooks/,
+# not per project. It only creates the symlinks; registering them in ~/.claude/settings.json
+# is manual. The symlink inherits the target mode, so the executable bit lives
+# in the repo file.
 
 SRC_DIR="$(cd "$(dirname "$0")" && pwd)/hooks"
 DST_DIR="$HOME/.claude/hooks"

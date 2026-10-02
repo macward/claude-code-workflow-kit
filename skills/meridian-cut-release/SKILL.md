@@ -18,8 +18,8 @@ Cuts a project's open release, assigning it a **SemVer version suggested from wh
 The cut freezes a release to **immutable** `released` — it can't be deleted or edited afterwards. It's the hard-to-undo step of this flow.
 
 - **Never cut without explicit user confirmation.** The skill stops at the preview and waits for OK.
-- **Never run this skill through to the cut unattended** (`/schedule`, `/loop`). Unattended it may at most present the preview and the suggested version; Max triggers the cut.
-- This is a Meridian write, not git. **Deploy remains 100% Max's** — this skill does no commit, push or deploy, and ends before all of that.
+- **Never run this skill through to the cut unattended** (`/schedule`, `/loop`). Unattended it may at most present the preview and the suggested version; the user triggers the cut.
+- This is a Meridian write, not git. **Deploy remains 100% the user's** — this skill does no commit, push or deploy, and ends before all of that.
 
 ## How this skill talks to Meridian
 
@@ -125,7 +125,7 @@ Let `V_SHIP` be the confirmed version:
 
 - Frozen release: `V_SHIP`, `released_at`.
 - New open release: `<next bucket>`.
-- Remind: **`CHANGELOG.md` update and deploy are still pending — Max does those.** The preview markdown (step 2) is exactly what goes in the new `## [V_SHIP] - <date>` section of `CHANGELOG.md`.
+- Remind: **`CHANGELOG.md` update and deploy are still pending — the user does those.** The preview markdown (step 2) is exactly what goes in the new `## [V_SHIP] - <date>` section of `CHANGELOG.md`.
 - Offer (optional, only if the user asks) to dump that block into the local `CHANGELOG.md`, moving the `[Unreleased]` content into the versioned section. **Leave it uncommitted** — stop before git.
 
 ## Rules
@@ -134,5 +134,5 @@ Let `V_SHIP` be the confirmed version:
 2. The bump derives from the rendered changelog, it's never invented. If the changelog is empty, there is no bump to suggest.
 3. Human confirmation mandatory before the cut. No exception, no unattended mode that reaches the cut.
 4. The shipped release's version is set with a `PATCH` on the open release **before** the cut; the cut's `version` is the next bucket, never the one being published.
-5. No commit, push or deploy. The skill ends at "release cut in Meridian, CHANGELOG.md and deploy pending on Max".
+5. No commit, push or deploy. The skill ends at "release cut in Meridian, CHANGELOG.md and deploy pending on the user".
 6. Don't fix or touch the tasks' `shipped_release_id` — it's write-once by the server at deploy.

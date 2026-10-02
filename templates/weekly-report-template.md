@@ -1,18 +1,18 @@
 # Weekly Report Template
 
-Plantilla para reportes semanales guardados en Meridian (carpeta `reports/`). Mismo público que `recap-template.md`: todo el equipo, sin jerga técnica. Sirve tanto para un solo proyecto como para varios combinados en un mismo reporte — la sección "Por proyecto" se repite una vez por proyecto y funciona igual con uno solo.
+Template for weekly reports saved in Meridian (`reports/` folder). Same audience as `recap-template.md`: the whole team, no technical jargon. It works both for a single project and for several combined in one report — the "Per project" section is repeated once per project and works the same with just one.
 
 ---
 
 ## Authoring rules
 
-1. **Sin tecnicismos sin explicación.** No "refactor", "PR", "async", "schema", "endpoint". Traducir: "la conexión entre sistemas", "la estructura de datos", etc.
-2. **Sin código.** Ni snippets, ni nombres de archivos, ni funciones.
-3. **Qué y por qué, nunca cómo.** Resultado y motivación, no pasos de implementación.
-4. **Una sección "Por proyecto" por cada proyecto cubierto.** Con un solo proyecto, queda una sola sección — no hace falta anunciar que es "multi-proyecto" ni fusionar nada.
-5. **El resumen ejecutivo es obligatorio, el resto es opcional si no aplica.** "Bloqueos", "Pendientes cruzados" y el bloque técnico se omiten enteros si no hay nada que decir — no forzar contenido.
-6. **Oraciones cortas. Sin bullets anidados.** Tono directo, como explicarle a alguien inteligente que no es dev.
-7. **Nunca inventar avances.** Si un proyecto no tuvo movimiento relevante en la semana, decirlo en una línea ("Sin cambios esta semana") en vez de omitir la sección o rellenarla.
+1. **No unexplained technical terms.** No "refactor", "PR", "async", "schema", "endpoint". Translate: "the connection between systems", "the data structure", etc.
+2. **No code.** No snippets, file names, or functions.
+3. **What and why, never how.** Result and motivation, not implementation steps.
+4. **One "Per project" section for each project covered.** With a single project, there is just one section — no need to announce it as "multi-project" or merge anything.
+5. **The executive summary is mandatory, the rest is optional if it doesn't apply.** "Blockers", "Cross-project pending items" and the technical block are omitted entirely if there is nothing to say — don't force content.
+6. **Short sentences. No nested bullets.** Direct tone, like explaining to someone smart who isn't a dev.
+7. **Never invent progress.** If a project had no relevant movement during the week, say so in one line ("No changes this week") instead of omitting the section or padding it.
 
 ---
 
@@ -22,46 +22,46 @@ Plantilla para reportes semanales guardados en Meridian (carpeta `reports/`). Mi
 ---
 week_start: YYYY-MM-DD
 week_end: YYYY-MM-DD
-projects: [<nombre>, <nombre>, ...]
-author: <nombre inferido del git config o la conversación>
+projects: [<name>, <name>, ...]
+author: <name inferred from git config or the conversation>
 ---
 
-# Weekly Report: <YYYY-MM-DD> a <YYYY-MM-DD>
+# Weekly Report: <YYYY-MM-DD> to <YYYY-MM-DD>
 
-## Resumen ejecutivo
+## Executive summary
 
-<2-4 oraciones con el panorama general de la semana. Con un solo proyecto, es el
-resumen de ese proyecto. Con varios, el hilo común o los hitos más relevantes
-entre todos, antes de entrar en el detalle por proyecto.>
+<2-4 sentences with the big picture of the week. With a single project, it is the
+summary of that project. With several, the common thread or the most relevant
+milestones across all of them, before getting into the per-project detail.>
 
-## Por proyecto
+## Per project
 
-### <Nombre del proyecto>
+### <Project name>
 
-**Qué avanzó**
-<2-4 oraciones sobre qué cambió o se entregó esta semana, en términos de
-funcionalidad o comportamiento observable.>
+**What moved forward**
+<2-4 sentences about what changed or was delivered this week, in terms of
+functionality or observable behavior.>
 
-**Bloqueos o riesgos**
-<Opcional. Solo si hay algo concreto frenando el avance. Omitir si no aplica.>
+**Blockers or risks**
+<Optional. Only if something concrete is holding back progress. Omit if it doesn't apply.>
 
-**Próxima semana**
-<1-3 oraciones sobre qué sigue.>
+**Next week**
+<1-3 sentences about what comes next.>
 
-<!-- Repetir el bloque "### <Nombre del proyecto>" completo por cada proyecto adicional. -->
+<!-- Repeat the whole "### <Project name>" block for each additional project. -->
 
-## Pendientes / decisiones abiertas
+## Pending items / open decisions
 
-<Opcional. Preguntas o decisiones sin resolver que cruzan proyectos o que
-quedan pendientes para la semana siguiente. Omitir si no hay nada relevante.>
+<Optional. Unresolved questions or decisions that cross projects or that
+remain pending for next week. Omit if there is nothing relevant.>
 
 ---
 
-<!-- BLOQUE TÉCNICO: incluir solo si hay detalles relevantes para el equipo técnico.
-     Si no aplica, eliminar esta sección completa. -->
+<!-- TECHNICAL BLOCK: include only if there are details relevant to the technical team.
+     If it doesn't apply, remove this whole section. -->
 
-## Para el equipo técnico
+## For the technical team
 
-<Detalles concretos por proyecto: tasks completadas, áreas del sistema
-afectadas, decisiones técnicas relevantes. Puede usar términos técnicos aquí.>
+<Concrete details per project: completed tasks, affected areas of the system,
+relevant technical decisions. Technical terms may be used here.>
 ```

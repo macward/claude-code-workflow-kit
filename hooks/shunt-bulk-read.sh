@@ -1,34 +1,34 @@
 #!/usr/bin/env python3
-"""PreToolUse hook (matchers: Read, Bash): bloquea la lectura completa de un
-archivo grande y la redirige al subagente `bulk-reader`, que lo lee en un
-contexto barato y devuelve un resumen anclado a `path:line`.
+"""PreToolUse hook (matchers: Read, Bash): blocks the full read of a large
+file and redirects it to the `bulk-reader` subagent, which reads it in a cheap
+context and returns a summary anchored to `path:line`.
 
-Es la versión local del "check-file-size" que Spotify montó sobre Portal
-(engineering.atspotify.com, 2026-09): mismo mecanismo — interceptar el read
-y delegarlo a un modelo barato — pero delegando a un subagente Haiku del
-propio harness en vez de a un mode remoto, así que no hay infra ni API keys
-de por medio.
+It is the local version of the "check-file-size" that Spotify mounted on Portal
+(engineering.atspotify.com, 2026-09): same mechanism — intercept the read
+and delegate it to a cheap model — but delegating to a Haiku subagent of the
+harness itself instead of a remote mode, so there is no infra or API keys
+involved.
 
-Qué se bloquea:
-  - `Read` de un archivo de texto con más de UMBRAL líneas y sin `limit`
-    (o con un `limit` mayor al umbral).
-  - `cat`/`less`/`more` pelado sobre un archivo así en Bash — el mismo
-    agujero que el hook `check-bash-read` del artículo. Un `cat` con pipe,
-    redirección o rango (`head`, `sed -n`, `grep`) no se toca.
+What is blocked:
+  - `Read` of a text file with more than THRESHOLD lines and no `limit`
+    (or with a `limit` above the threshold).
+  - Bare `cat`/`less`/`more` on such a file in Bash — the same
+    hole as the article's `check-bash-read` hook. A `cat` with a pipe,
+    redirection or range (`head`, `sed -n`, `grep`) is left alone.
 
-Qué NO se bloquea, a propósito:
-  - Lecturas con `offset`/`limit` acotados. Es la salida para editar (el
-    resumen del worker no reemplaza ver el fragmento real) y es también lo
-    que deja que el propio `bulk-reader` haga su trabajo por chunks sin
-    chocar contra este hook de forma recursiva.
-  - Binarios, imágenes, PDFs y notebooks: ahí `Read` hace otra cosa.
+What is NOT blocked, on purpose:
+  - Reads with bounded `offset`/`limit`. That is the way out for editing (the
+    worker's summary does not replace seeing the real fragment) and it is also
+    what lets `bulk-reader` itself do its job in chunks without
+    recursively running into this hook.
+  - Binaries, images, PDFs and notebooks: `Read` does something else there.
 
 Env:
-  CLAUDE_BULK_READ_THRESHOLD  umbral en líneas (default 350)
-  CLAUDE_BULK_READ_OFF=1      desactiva el hook por completo
+  CLAUDE_BULK_READ_THRESHOLD  threshold in lines (default 350)
+  CLAUDE_BULK_READ_OFF=1      disables the hook entirely
 
-Global (no por-proyecto): el coste de leer un archivo de 3.000 líneas es el
-mismo en cualquier repo.
+Global (not per-project): the cost of reading a 3,000-line file is the
+same in any repo.
 """
 import json
 import os
@@ -38,8 +38,8 @@ import sys
 
 DEFAULT_THRESHOLD = 350
 
-# Extensiones donde `Read` no devuelve texto plano (imágenes, PDF, notebooks)
-# o donde contar líneas no significa nada.
+# Extensions where `Read` does not return plain text (images, PDF, notebooks)
+# or where counting lines means nothing.
 BINARY_EXTS = {
     ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg", ".ico",
     ".pdf", ".ipynb",
@@ -47,8 +47,8 @@ BINARY_EXTS = {
     ".mp4", ".mov", ".mp3", ".wav", ".woff", ".woff2", ".ttf",
 }
 
-# `cat archivo` / `less archivo` pelado: un solo argumento, sin flags, sin
-# pipe ni redirección. Cualquier cosa más compleja ya está acotando la salida.
+# Bare `cat file` / `less file`: a single argument, no flags, no
+# pipe or redirection. Anything more complex is already bounding the output.
 BARE_CAT = re.compile(r"^\s*(cat|less|more|bat)\s+([^\s|<>;&]+)\s*$")
 
 
@@ -60,7 +60,7 @@ def threshold() -> int:
 
 
 def count_lines(path: str, cap: int) -> int:
-    """Cuenta líneas parando en `cap`; devuelve -1 si el archivo no es texto."""
+    """Count lines, stopping at `cap`; return -1 if the file is not text."""
     lines = 0
     try:
         with open(path, "rb") as fh:
@@ -83,14 +83,14 @@ def is_readable_text(path: str) -> bool:
 
 def reason(path: str, lines: int, limit: int) -> str:
     return (
-        f"{path} tiene ~{lines} líneas (umbral: {limit}). No lo leas entero — "
-        "delegalo: Agent(subagent_type=\"bulk-reader\") con la pregunta "
-        "concreta que querés responder y la ruta del archivo. El worker lo "
-        "lee en un contexto barato y te devuelve un resumen con anclas "
-        "`path:line`.\n"
-        "Excepciones legítimas, sin delegar: leé el fragmento que necesitás "
-        f"con offset/limit (limit <= {limit}) — es lo correcto antes de "
-        "editar, porque el resumen del worker no trae el código literal."
+        f"{path} has ~{lines} lines (threshold: {limit}). Do not read it whole — "
+        "delegate it: Agent(subagent_type=\"bulk-reader\") with the specific "
+        "question you want answered and the file path. The worker reads it "
+        "in a cheap context and returns a summary with `path:line` "
+        "anchors.\n"
+        "Legitimate exceptions, without delegating: read the fragment you need "
+        f"with offset/limit (limit <= {limit}) — it is the right thing before "
+        "editing, because the worker's summary does not include the literal code."
     )
 
 
@@ -109,8 +109,8 @@ def check_read(tool_input: dict, cap: int) -> None:
     if not is_readable_text(path):
         return
 
-    # Una lectura ya acotada por debajo del umbral es exactamente lo que
-    # queremos que pase: no la tocamos.
+    # A read already bounded below the threshold is exactly what we want
+    # to let through: we do not touch it.
     requested = tool_input.get("limit")
     if isinstance(requested, int) and 0 < requested <= cap:
         return

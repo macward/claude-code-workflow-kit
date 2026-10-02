@@ -4,7 +4,7 @@ set -euo pipefail
 # ─── Config ──────────────────────────────────────────────────────────────────
 CLAUDE_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Se instala por proyecto, nunca en ~/.claude/: el destino es <proyecto>/.claude/.
+# Installed per project, never in ~/.claude/: the target is <project>/.claude/.
 set_target() {
     if [ -z "${1:-}" ] || [ ! -d "$1" ]; then
         echo "Usage: ./install.sh $CMD <project-dir>" >&2

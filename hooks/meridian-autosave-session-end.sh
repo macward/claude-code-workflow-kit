@@ -1,38 +1,38 @@
 #!/bin/bash
-# SessionEnd hook: dispara el destilador de Memory v2 al cerrar una sesión.
+# SessionEnd hook: triggers the Memory v2 distiller when a session closes.
 #
-# El evento es SessionEnd, NO Stop: Stop dispara una vez por turno ("when Claude
-# finishes responding"), así que montado ahí esto lanzaría una sesión headless
-# después de cada respuesta. Ver skills/meridian-autosave/SKILL.md.
+# The event is SessionEnd, NOT Stop: Stop fires once per turn ("when Claude
+# finishes responding"), so mounted there this would launch a headless session
+# after every response. See skills/meridian-autosave/SKILL.md.
 
-# Guard anti-recursión: el `claude -p` de abajo es una sesión que, al terminar,
-# dispara su PROPIO SessionEnd. La env var se hereda (la doc lo garantiza:
-# "Handlers run in the current directory with Claude Code's environment"), así
-# que el hook de la sesión hija entra acá y sale sin re-armar nada.
+# Anti-recursion guard: the `claude -p` below is a session that, when it ends,
+# fires its OWN SessionEnd. The env var is inherited (the docs guarantee it:
+# "Handlers run in the current directory with Claude Code's environment"), so
+# the child session's hook gets in here and exits without re-arming anything.
 [ -n "$MERIDIAN_AUTOSAVE_HOOK" ] && exit 0
 export MERIDIAN_AUTOSAVE_HOOK=1
 
 LOG_DIR="$HOME/.claude/logs"
 mkdir -p "$LOG_DIR"
 
-# El JSON del hook (session_id, transcript_path, cwd, reason) llega por stdin y
-# es la ÚNICA fuente del transcript: la sesión headless de abajo arranca vacía y
-# no tiene forma de ver la conversación que acaba de cerrar. Durante 104 corridas
-# este stdin se descartaba, así que la Fase 1 reportaba "Capturados: 0" siempre
-# — el sistema de memoria corría entero en vacío. No volver a tirarlo.
+# The hook JSON (session_id, transcript_path, cwd, reason) arrives on stdin and
+# is the ONLY source of the transcript: the headless session below starts empty
+# and has no way to see the conversation that just closed. For 104 runs this
+# stdin was discarded, so Phase 1 always reported "Captured: 0" — the whole
+# memory system ran empty. Do not throw it away again.
 HOOK_JSON=$(cat)
 
-# El digest se inyecta en el prompt por argv en vez de pasarse como path porque
-# --allowedTools no incluye Read (ni debe: es la frontera dura de la corrida
-# desatendida). Que el transcript viaje en el prompt mantiene la superficie de
-# tools en mem_* puro.
+# The digest is injected into the prompt via argv instead of being passed as a
+# path because --allowedTools does not include Read (and must not: it is the
+# hard boundary of the unattended run). Having the transcript travel in the
+# prompt keeps the tool surface purely mem_*.
 if command -v python3 >/dev/null 2>&1; then
     PROMPT=$(MERIDIAN_HOOK_JSON="$HOOK_JSON" python3 -c '
 import json, os, sys
 
-# Techo del digest en caracteres. El transcript crudo puede ser de megabytes;
-# lo que entra es solo texto de turnos (sin tool_use ni tool_result), y aun así
-# una sesión larga lo supera.
+# Digest ceiling in characters. The raw transcript can be megabytes;
+# what goes in is only turn text (no tool_use or tool_result), and even so
+# a long session exceeds it.
 MAX_CHARS = 120000
 
 try:
@@ -42,11 +42,11 @@ except ValueError:
 
 cwd = hook.get("cwd") or os.getcwd()
 
-# El project sale del CLAUDE.md más cercano hacia arriba. Se resuelve acá y no
-# en la skill por la misma razón que el digest: la sesión headless no puede leer
-# archivos. Sin project no hay nada que la skill pueda hacer, así que el hook
-# no la lanza (exit 3) — eso también apaga el ruido de las sesiones abiertas
-# fuera de un proyecto Meridian.
+# The project comes from the nearest CLAUDE.md going upward. It is resolved
+# here and not in the skill for the same reason as the digest: the headless
+# session cannot read files. Without a project there is nothing the skill can
+# do, so the hook does not launch it (exit 3) — that also silences the noise
+# from sessions opened outside a Meridian project.
 project = ""
 directory = os.path.abspath(cwd)
 while not project:
@@ -108,47 +108,47 @@ except OSError:
 
 digest = "\n\n".join(turns)
 if len(digest) > MAX_CHARS:
-    # Se conservan las dos puntas: las decisiones de arquitectura suelen caer
-    # temprano y las correcciones tarde. Cortar solo la cola perdería unas u otras.
+    # Both ends are kept: architecture decisions tend to land early and
+    # corrections late. Cutting only the tail would lose one or the other.
     head = int(MAX_CHARS * 0.3)
-    digest = digest[:head] + "\n\n[... transcripto elidido por presupuesto ...]\n\n" + digest[head - MAX_CHARS:]
+    digest = digest[:head] + "\n\n[... transcript elided for budget ...]\n\n" + digest[head - MAX_CHARS:]
 
 prompt = "/meridian-autosave --project " + project + "\n\n"
 if digest:
     prompt += (
-        "Corrida headless desde el hook SessionEnd. Abajo, entre <transcript>, va la "
-        "conversación de la sesión que acaba de cerrar: vos NO participaste de ella. "
-        "Es la entrada de la Fase 1 (captura) y la única que hay — no busques más contexto.\n\n"
+        "Headless run from the SessionEnd hook. Below, inside <transcript>, is the "
+        "conversation of the session that just closed: you did NOT take part in it. "
+        "It is the input for Phase 1 (capture) and the only one there is — do not look for more context.\n\n"
         "<transcript>\n" + digest + "\n</transcript>\n"
     )
 else:
     prompt += (
-        "Corrida headless desde el hook SessionEnd. No hay transcripto disponible "
-        "(vacío o ilegible): saltear la Fase 1 y correr solo la Fase 2 (destilación del backlog).\n"
+        "Headless run from the SessionEnd hook. No transcript is available "
+        "(empty or unreadable): skip Phase 1 and run only Phase 2 (backlog distillation).\n"
     )
 sys.stdout.write(prompt)
 ')
     case $? in
         3)
-            # cwd fuera de un proyecto Meridian, o JSON del hook ilegible.
+            # cwd outside a Meridian project, or unreadable hook JSON.
             exit 0
             ;;
         0) ;;
         *)
-            echo "[autosave] no se pudo armar el prompt desde el JSON del hook" >&2
+            echo "[autosave] could not build the prompt from the hook JSON" >&2
             exit 0
             ;;
     esac
 else
-    # Sin python3 no hay digest posible. Se degrada a la corrida vieja (solo
-    # Fase 2) en vez de no correr, pero ruidosamente: la Fase 1 no tiene red.
-    echo "[autosave] sin python3: corriendo sin transcript, la captura queda sin hacer" >&2
+    # Without python3 no digest is possible. It degrades to the old run (Phase 2
+    # only) instead of not running, but loudly: Phase 1 has no safety net.
+    echo "[autosave] no python3: running without transcript, capture is left undone" >&2
     PROMPT='/meridian-autosave'
 fi
 
-# --allowedTools es la frontera dura de la corrida desatendida, no una
-# convención: enumera exactamente la superficie mem_* que la skill usa, así no
-# puede tocar tasks, docs ni git aunque el modelo lo intentara.
+# --allowedTools is the hard boundary of the unattended run, not a
+# convention: it enumerates exactly the mem_* surface the skill uses, so it
+# cannot touch tasks, docs or git even if the model tried.
 # mem_state is in the list because the project state is the part of memory that
 # ages worst: one doc per project, overwritten in place, and until Phase 3 it was
 # written only by /meridian-recap — run on some sessions, not others. On
@@ -160,20 +160,20 @@ fi
 CMD=(claude -p "$PROMPT"
      --allowedTools "mcp__meridian__mem_save,mcp__meridian__mem_search,mcp__meridian__mem_get,mcp__meridian__mem_distill_batch,mcp__meridian__mem_distill_ack,mcp__meridian__mem_upsert_fact,mcp__meridian__mem_relate,mcp__meridian__mem_state")
 
-# Techo de tiempo. Sin esto, una corrida trabada (un juicio de contradicción que
-# no converge, un reintento en loop) corre sin límite contra la cuenta de
-# producción, desatendida y sin nadie mirando. Overrideable para depurar.
+# Time ceiling. Without this, a stuck run (a contradiction judgment that does not
+# converge, a retry in a loop) runs without limit against the production
+# account, unattended and with nobody watching. Overridable for debugging.
 TIMEOUT_SECONDS="${MERIDIAN_AUTOSAVE_TIMEOUT:-1800}"
 
-# Desacople del proceso padre. SessionEnd no bloquea el cierre ("If a SessionEnd
-# hook is slow, Claude Code will complete session termination independently") y
-# la destilación tarda minutos: atada al padre, el teardown se la llevaría por
-# delante. Hace falta una sesión nueva, no solo ignorar SIGHUP.
+# Detach from the parent process. SessionEnd does not block the close ("If a SessionEnd
+# hook is slow, Claude Code will complete session termination independently") and
+# distillation takes minutes: tied to the parent, the teardown would take it
+# down with it. A new session is needed, not just ignoring SIGHUP.
 #
-# Ni `setsid` ni `timeout` existen en macOS (los dos son de util-linux), así que
-# el camino principal es un shim de Python que hace ambas cosas: os.setsid() para
-# la sesión nueva y un wait con timeout para el techo. Sin este branch el hook
-# moriría con "command not found" en la máquina de desarrollo, en silencio.
+# Neither `setsid` nor `timeout` exists on macOS (both are from util-linux), so
+# the main path is a Python shim that does both: os.setsid() for the new
+# session and a wait with timeout for the ceiling. Without this branch the hook
+# would die with "command not found" on the development machine, silently.
 if command -v python3 >/dev/null 2>&1; then
     LAUNCH=(nohup python3 -c '
 import subprocess, sys, os
@@ -184,20 +184,20 @@ try:
     sys.exit(proc.wait(timeout=timeout))
 except subprocess.TimeoutExpired:
     proc.kill()
-    print(f"[autosave] matado tras {timeout}s sin terminar", file=sys.stderr)
+    print(f"[autosave] killed after {timeout}s without finishing", file=sys.stderr)
     sys.exit(124)
 ' "$TIMEOUT_SECONDS")
 elif command -v setsid >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; then
     LAUNCH=(setsid nohup timeout "$TIMEOUT_SECONDS")
 else
-    # Último recurso: sin sesión propia ni techo, pero al menos inmune a SIGHUP.
-    echo "[autosave] sin python3 ni setsid+timeout: corriendo sin techo de tiempo" >&2
+    # Last resort: no session of its own and no ceiling, but at least immune to SIGHUP.
+    echo "[autosave] no python3 nor setsid+timeout: running without a time ceiling" >&2
     LAUNCH=(nohup)
 fi
 
-# stdin a /dev/null: el JSON del hook ya lo consumió este script y viaja en el
-# prompt; el hijo no debe quedar colgado del pipe.
+# stdin to /dev/null: the hook JSON was already consumed by this script and
+# travels in the prompt; the child must not stay hanging off the pipe.
 "${LAUNCH[@]}" "${CMD[@]}" < /dev/null >> "$LOG_DIR/meridian-autosave.log" 2>&1 &
 
-# Explícito: el estado del job en background no debe filtrarse como el del hook.
+# Explicit: the background job state must not leak out as the hook state.
 exit 0

@@ -209,7 +209,7 @@ git rev-list --count <head_before>..HEAD
 |---|---|---|
 | `1` | the normal case | verify the commit **isn't empty** (below), then check 3 |
 | `0` | solve-task didn't commit | see below |
-| `>1` | the task was split into several commits | **stop the run** and report the shas. One commit per task; **don't squash automatically** — Max looks at the diff |
+| `>1` | the task was split into several commits | **stop the run** and report the shas. One commit per task; **don't squash automatically** — the user looks at the diff |
 
 **If `1`**, confirm it changed something: `git diff --quiet HEAD~1 HEAD` must exit ≠ 0. An empty commit (`--allow-empty`) passes the count without committing work → **stop the run**.
 
@@ -244,7 +244,7 @@ It must return exactly the first 8 chars of the `task_id` you **already have** f
 
 ### 6. Failure handling
 
-A failed task **isn't committed**: its changes stay in the working tree for Max to review or discard. run-plan neither commits nor cleans them, and doesn't touch the run's previous commits (no `git reset`, no automatic `git revert`).
+A failed task **isn't committed**: its changes stay in the working tree for the user to review or discard. run-plan neither commits nor cleans them, and doesn't touch the run's previous commits (no `git reset`, no automatic `git revert`).
 
 **Autonomous:** stop executing tasks and **go to step 7 with a partial result** — same as confirm's `abort`. **Never end the run here without step 7**: the already-verified commits still need their push decision, and 7.2 and 7.3 have explicit partial-run cases.
 
@@ -279,7 +279,7 @@ In all three, **the working tree has the failed task's changes on top, and run-p
 Decided by `<run_branch>` vs `<base_branch>`, not by the run's mode:
 
 - **`<run_branch>` ≠ `<base_branch>`** → `git push -u origin <run_branch>`. The human gate remains at the merge.
-- **`<run_branch>` == `<base_branch>`** → **don't push.** Pushing the base triggers the deploy — Max triggers it. The commits stay local and the summary says so.
+- **`<run_branch>` == `<base_branch>`** → **don't push.** Pushing the base triggers the deploy — the user triggers it. The commits stay local and the summary says so.
 - **`<base_branch>` indeterminate** → don't push, and say why (fail closed, see Setup).
 
 A single push, not one per task. If it fails (diverged remote, no upstream, credentials) → don't retry blindly: report the error and leave the local commits. The run still succeeded; publishing didn't.
@@ -305,7 +305,7 @@ Body:
 
 **No AI attribution**: no `Co-Authored-By: Claude`, no `Claude-Session:`, no "🤖 Generated with Claude Code".
 
-**Stop there. Don't merge.** Merge and deploy are Max's. If `gh pr create` fails, report the error — the branch is already pushed and the PR can be opened by hand.
+**Stop there. Don't merge.** Merge and deploy are the user's. If `gh pr create` fails, report the error — the branch is already pushed and the PR can be opened by hand.
 
 #### 7.3 Final summary
 
@@ -334,7 +334,7 @@ PR: <url>
 
 The commits line reflects 7.1:
 - working branch → `2 new commits on <run_branch> — pushed ✓`
-- base branch → `2 new commits on <base_branch> — not pushed (pushing the base is Max's trigger).`
+- base branch → `2 new commits on <base_branch> — not pushed (pushing the base is the user's trigger).`
 - failed push → `2 new commits on <run_branch> — push FAILED: <error>. The commits are local.`
 
 The `PR:` line reflects 7.2:

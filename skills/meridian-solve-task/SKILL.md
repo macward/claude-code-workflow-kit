@@ -182,9 +182,9 @@ The report states how many criteria were verified by `[cmd]` vs. `[judgment]`.
 | Mode | Current branch | Commit | Push |
 |---|---|---|---|
 | standalone | ≠ `<base_branch>` | **this skill** (8.1) | **this skill** (8.2) |
-| standalone | == `<base_branch>` | **this skill** (8.1) | no — pushing the base is Max's trigger |
+| standalone | == `<base_branch>` | **this skill** (8.1) | no — pushing the base is the user's trigger |
 | under run-plan | == `<run_branch>` ≠ `<base_branch>` | **this skill** (8.1) | no — run-plan, on closing the run |
-| under run-plan | == `<run_branch>` == `<base_branch>` | **this skill** (8.1) | no — pushing the base is Max's trigger |
+| under run-plan | == `<run_branch>` == `<base_branch>` | **this skill** (8.1) | no — pushing the base is the user's trigger |
 | any | `<base_branch>` indeterminate | **this skill** (8.1) | no — fail closed (see Setup) |
 | under run-plan | ≠ `<run_branch>` | nobody — **stop** (see 8.1) | no |
 

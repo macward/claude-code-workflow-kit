@@ -26,7 +26,7 @@ If any of these are missing and you cannot infer them safely from `git status` /
 - **Refuse to commit** files that look like secrets (`.env`, `*credentials*`, `*.pem`, `id_rsa*`). Surface them to the caller instead.
 - Conventional Commits style (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`).
 - Pass commit messages and PR bodies via HEREDOC to preserve formatting.
-- **Never add AI attribution.** No `Co-Authored-By: Claude ...` trailer, no `Claude-Session:` link, no "🤖 Generated with Claude Code" — ni en el mensaje de commit ni en el cuerpo del PR. El author siempre es Max Ward.
+- **Never add AI attribution.** No `Co-Authored-By: Claude ...` trailer, no `Claude-Session:` link, no "🤖 Generated with Claude Code" — neither in the commit message nor in the PR body. The author is always the user.
 
 ## Workflow
 

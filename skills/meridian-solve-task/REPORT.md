@@ -39,9 +39,9 @@ Committed files: <one per line, from git show --name-only HEAD>
 |---|---|
 | standalone, committed and pushed | `Committed <short sha> and pushed to <branch>.` |
 | standalone, committed, push failed | `Committed <short sha> — push FAILED: <error>. The commit is local.` |
-| standalone, committed on `<base_branch>` | `Commit: <short sha> — not pushed (pushing the base is Max's trigger).` |
+| standalone, committed on `<base_branch>` | `Commit: <short sha> — not pushed (pushing the base is the user's trigger).` |
 | under run-plan, committed on a working branch | `Commit: <short sha> — not pushed (the push belongs to the run's close).` |
-| under run-plan, committed on `<base_branch>` | `Commit: <short sha> — not pushed (pushing the base is Max's trigger).` |
+| under run-plan, committed on `<base_branch>` | `Commit: <short sha> — not pushed (pushing the base is the user's trigger).` |
 | `<base_branch>` indeterminate | `Commit: <short sha> — not pushed, couldn't determine the base branch.` |
 | no changes in the working tree | `No changes to commit — the task touched no files.` |
 

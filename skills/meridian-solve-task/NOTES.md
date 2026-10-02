@@ -1,121 +1,121 @@
-# Notas de `/meridian-solve-task` — evidencia y decisiones
+# Notes on `/meridian-solve-task` — evidence and decisions
 
-Esto **no es el proceso**: el proceso vive entero en `SKILL.md` y se ejecuta sin leer este archivo. Acá está la evidencia detrás de las reglas menos obvias — qué se midió, cuándo, y qué redacción anterior resultó estar mal.
+This is **not the process**: the process lives entirely in `SKILL.md` and runs without reading this file. Here is the evidence behind the less obvious rules — what was measured, when, and which earlier wording turned out to be wrong.
 
-Leerlo cuando haga falta **cambiar** una de esas reglas. Una regla cuya evidencia nadie recuerda se deshace sola en el refactor siguiente; ese es el trabajo de este archivo, y por eso está separado: es caro de tener en contexto en cada turno y sólo hace falta al editar la skill.
+Read it when you need to **change** one of those rules. A rule whose evidence nobody remembers undoes itself in the next refactor; that is this file's job, and it is kept separate because it is expensive to hold in context on every turn and is only needed when editing the skill.
 
 ---
 
-## Gates anidados: qué está verificado y qué no
+## Nested gates: what is verified and what is not
 
-**Los gates de los steps 6 y 7 corren aunque la skill ya esté dentro de un subagente** — verificado el 2026-08-07. La cadena `/meridian-run-plan` → `/meridian-solve-task` → agente de gate corrió completa en dos tasks independientes, y los agentes del nivel más interno produjeron reviews con números de línea y hallazgos que el nivel intermedio no les había pasado: evidencia que sólo puede producir un agente que efectivamente leyó los archivos. Eso cierra una sola de las dos preguntas: **el spawn más interno no se declina en silencio**.
+**The gates of steps 6 and 7 run even when the skill is already inside a subagent** — verified on 2026-08-07. The chain `/meridian-run-plan` → `/meridian-solve-task` → gate agent ran to completion on two independent tasks, and the innermost agents produced reviews with line numbers and findings that the middle level had not passed to them: evidence that only an agent that actually read the files can produce. That settles only one of the two questions: **the innermost spawn is not silently declined**.
 
-**Que su resultado vuelva a quien los lanzó no está verificado, y es el modo de fallo abierto.** En las tasks 004 y 006 del run del 2026-08-08 se observó que la notificación del nieto llega al contexto del **abuelo** (run-plan) en vez del padre (solve-task): el gate corrió y habló, pero su padre nunca lo recibió y reportó igual. En la 004 nadie lo notó; en la 006 lo salvó que el propio agente sospechara y fuera a buscar el output a mano. Eso es suerte, no una garantía.
+**That their result gets back to whoever launched them is not verified, and it is the open failure mode.** On tasks 004 and 006 of the 2026-08-08 run, the grandchild's notification was observed arriving in the **grandparent's** context (run-plan) instead of the parent's (solve-task): the gate ran and spoke, but its parent never received it and reported anyway. On 004 nobody noticed; on 006 it was saved by the agent itself getting suspicious and going to fetch the output by hand. That is luck, not a guarantee.
 
-Que un agente lea los archivos y que su output llegue a su padre son dos cosas distintas, y la prueba del 2026-08-07 sólo probó la primera. Es el modo de fallo que estos gates existen para tapar, corrido un nivel: **"no recibí el review" y "el review no encontró nada" son indistinguibles desde afuera** salvo que se los distinga explícitamente.
+An agent reading the files and its output reaching its parent are two different things, and the 2026-08-07 test only proved the first. It is the failure mode these gates exist to cover, one level down: **"I didn't receive the review" and "the review found nothing" are indistinguishable from the outside** unless they are explicitly distinguished.
 
-**De ahí salen tres reglas del SKILL.md, y ninguna es cosmética:** la línea `GATE …` literal que exigen los steps 6 y 7, la cota de 10 minutos con `TaskStop` al vencer, y la prohibición del step 10 de emitir un reporte de éxito sin las dos líneas `GATE` citadas. El desvío de notificaciones es comportamiento de la plataforma y no se arregla desde acá; **la defensa es detectar la pérdida, no evitarla.**
+**Three SKILL.md rules come from this, and none is cosmetic:** the literal `GATE …` line that steps 6 and 7 require, the 10-minute bound with `TaskStop` on expiry, and step 10's ban on emitting a success report without the two quoted `GATE` lines. The notification diversion is platform behavior and can't be fixed from here; **the defense is detecting the loss, not avoiding it.**
 
-## La frontera run-plan → solve-task, y por qué la causa no estaba acá
+## The run-plan → solve-task boundary, and why the cause wasn't here
 
-Cerrada el 2026-08-08. Un subagente que corre el proceso completo —incluido spawnear su propio agente anidado— llega al commit y devuelve su reporte con el header exacto: la corrida de control tardó 29 segundos y dejó el commit con su trailer legible por `%(trailers:key=Task,valueonly)`.
+Closed on 2026-08-08. A subagent running the full process —including spawning its own nested agent— reaches the commit and returns its report with the exact header: the control run took 29 seconds and left the commit with its trailer readable by `%(trailers:key=Task,valueonly)`.
 
-Lo que fallaba era el lado del orquestador. El `Agent` tool devuelve metadata de spawn y no el reporte, así que run-plan seguía trabajando —y commiteando— con los hijos todavía vivos, y las dos partes se pisaban el `.git/index.lock`. Medido: dos procesos commiteando en paralelo sobre un repo dejaron **6 de 13 commits**, perdiendo el resto en silencio salvo por `fatal: Unable to create '.git/index.lock': File exists`. El arreglo vive en el step 5 de `/meridian-run-plan`.
+What was failing was the orchestrator side. The `Agent` tool returns spawn metadata and not the report, so run-plan kept working —and committing— with the children still alive, and the two parties clobbered each other on `.git/index.lock`. Measured: two processes committing in parallel on one repo left **6 of 13 commits**, silently losing the rest except for `fatal: Unable to create '.git/index.lock': File exists`. The fix lives in step 5 of `/meridian-run-plan`.
 
-Lo cerrado es **esa** frontera, medida sobre ese call site. El mismo mecanismo asincrónico rige cualquier otro spawn del repo y no todos se auditaron.
+What is closed is **that** boundary, measured on that call site. The same asynchronous mechanism governs every other spawn in the repo and not all of them were audited.
 
-## Por qué el commit vive en esta skill y no en run-plan
+## Why the commit lives in this skill and not in run-plan
 
-Acá está la información con la que se escribe el mensaje: el diff, los criterios y por qué el trabajo quedó como quedó. El orquestador tiene el título de la task y un reporte en prosa, y un mensaje de commit escrito desde afuera es peor.
+The information the message is written from is here: the diff, the criteria and why the work ended up the way it did. The orchestrator has the task title and a prose report, and a commit message written from outside is worse.
 
-El split anterior además obligaba a run-plan a defenderse de que esta skill commiteara "por su cuenta" — señal de que el contrato peleaba con el diseño.
+The previous split also forced run-plan to defend itself against this skill committing "on its own" — a sign that the contract was fighting the design.
 
-**La fila de `<base_branch>` decía antes "nadie — lo dispara el usuario"**, que era el gate que la Git Policy declara innecesario (la línea irreversible cae entre el commit y el push, no antes). Costaba caro: dejaba a Max commiteando a mano el trabajo de una task, y el trailer `Task:` —que existe justamente para que lo escriba una máquina— se olvidaba, con lo que la task no llegaba nunca a `deployed`. Es el modo de fallo que `/meridian-task` fue creada para tapar, y que se colaba igual por acá.
+**The `<base_branch>` row used to say "nobody — the user triggers it"**, which was the gate the Git Policy declares unnecessary (the irreversible line falls between the commit and the push, not before). It was expensive: it left the user committing a task's work by hand, and the `Task:` trailer —which exists precisely so a machine writes it— got forgotten, so the task never reached `deployed`. It is the failure mode `/meridian-task` was created to cover, and it slipped in through here anyway.
 
-## Por qué el step 8.1 chequea si hay algo que commitear
+## Why step 8.1 checks whether there is anything to commit
 
-Antes se hacía `git add -A` con el índice vacío, `git commit` salía con código distinto de cero, y la skill reportaba `Commit FAILED: nothing to commit`: bajo run-plan eso **cortaba un run entero por una task que salió perfecta**. Una task de verificación pura ("confirmar que la migración es idempotente; no agregar código si ya lo es") termina legítimamente sin tocar archivos.
+Before, `git add -A` ran with an empty index, `git commit` exited non-zero, and the skill reported `Commit FAILED: nothing to commit`: under run-plan that **cut an entire run short over a task that went perfectly**. A pure verification task ("confirm the migration is idempotent; don't add code if it already is") legitimately ends without touching files.
 
-## Por qué el reporte lista los archivos commiteados
+## Why the report lists the committed files
 
-`git add -A` toma **todo** lo que haya en el árbol, incluidos artefactos que la propia task generó sin proponérselo: archivos de coverage, `.pytest_cache` si no está ignorado, o el `docs/schema.sql` que el pre-commit regenera. run-plan garantiza tree limpio al empezar cada task, así que el alcance es correcto por construcción; lo que faltaba era que el commit dijera qué se llevó puesto.
+`git add -A` takes **everything** in the tree, including artifacts the task itself generated unintentionally: coverage files, `.pytest_cache` if not ignored, or the `docs/schema.sql` that pre-commit regenerates. run-plan guarantees a clean tree at the start of each task, so the scope is correct by construction; what was missing was the commit saying what it took with it.
 
-## Por qué las dos tablas del step 10 se indexan distinto
+## Why the two tables in step 10 are indexed differently
 
-La de éxito por situación de git, la de falla por el token `Stage:` que el reporte ya trae. Antes era una sola tabla con las dos convenciones adentro, y quien tuviera que mapear un token a su línea lo hacía por inferencia en la mitad de las filas y por match literal en la otra mitad.
+The success one by git situation, the failure one by the `Stage:` token the report already carries. Before it was a single table with both conventions inside, and whoever had to map a token to its line did so by inference on half the rows and by literal match on the other half.
 
-## Por qué run-plan no parsea el trailer del reporte
+## Why run-plan doesn't parse the report's trailer
 
-El trailer lo escribe esta skill, derivado del `task_id` que trajo de `get_task` (step 1) — no del texto de ningún reporte. run-plan verifica el commit ya hecho con `git log -1 --format='%(trailers:key=Task,valueonly)'` —el mismo accessor que usa `scripts/mark_deployed.sh` al deployar— contra el `task_id` que él mismo tiene de `list_tasks` (su step 5.1).
+The trailer is written by this skill, derived from the `task_id` it got from `get_task` (step 1) — not from the text of any report. run-plan verifies the already-made commit with `git log -1 --format='%(trailers:key=Task,valueonly)'` —the same accessor `scripts/mark_deployed.sh` uses when deploying— against the `task_id` it has itself from `list_tasks` (its step 5.1).
 
-Las dos skills derivan el trailer de la misma fuente autoritativa por separado y después contrastan el resultado en git, que es máquina-legible. Acoplarlas por el texto de un reporte que además lleva cuatro secciones de prosa libre (10.1) sería frágil, y el modo de fallo era silencioso: commit sin trailer y la task fuera del ciclo `done→deployed`.
+The two skills derive the trailer from the same authoritative source separately and then cross-check the result in git, which is machine-readable. Coupling them through the text of a report that also carries four sections of free prose (10.1) would be fragile, and the failure mode was silent: commit without trailer and the task outside the `done→deployed` cycle.
 
-**Consecuencia para el step 8.1:** el trailer tiene que quedar en un bloque de trailers real — última línea, precedida por una línea en blanco.
+**Consequence for step 8.1:** the trailer has to end up in a real trailer block — last line, preceded by a blank line.
 
-## Por qué el límite de iteraciones de los gates es 2
+## Why the gates' iteration limit is 2
 
-Los steps 6 y 7 son gates de **juicio**, no determinísticos. Un tercer intento sobre un blocker que sobrevivió a dos arreglos casi nunca es un arreglo: es el review y el implementador desacordando sobre algo que necesita a Max.
+Steps 6 and 7 are **judgment** gates, not deterministic ones. A third attempt on a blocker that survived two fixes is almost never a fix: it is the review and the implementer disagreeing about something that needs the user.
 
-Sin ese límite, el bucle 3→6 no tiene condición de salida y el subagente cuelga al invocador en silencio — el mismo modo de fallo que los steps 4 y 7 ya tienen tapado.
+Without that limit, the 3→6 loop has no exit condition and the subagent silently hangs its invoker — the same failure mode steps 4 and 7 already have covered.
 
-## Por qué el step 1 acepta prefijo de título y de task-id
+## Why step 1 accepts a title prefix and a task-id prefix
 
-Las dos formas se usan: los planes de `/meridian-task-breakdown` numeran los títulos `NNN-`, y `/meridian-task` crea una task suelta y pasa su **id de 8 caracteres**, que nunca va a prefijar un título `NNN-slug`. Con sólo la primera forma, toda invocación desde `/meridian-task` terminaba sin match.
+Both forms are used: the plans from `/meridian-task-breakdown` number the titles `NNN-`, and `/meridian-task` creates a standalone task and passes its **8-character id**, which will never prefix an `NNN-slug` title. With only the first form, every invocation from `/meridian-task` ended with no match.
 
-## Por qué la invocación directa se delega a un subagente
+## Why direct invocation is delegated to a subagent
 
-Medido sobre los 31 runs del proyecto entre 2026-07-11 y 2026-08-11 con `scripts/skill_cost.py --context`, cuando la invocación directa todavía corría en el contexto del usuario:
+Measured over the project's 31 runs between 2026-07-11 and 2026-08-11 with `scripts/skill_cost.py --context`, when direct invocation still ran in the user's context:
 
 | | |
 |---|---|
-| contexto heredado al arrancar | mediana **76K**, p90 285K, max 626K |
-| lo que el run agregaba por turno | ~900 tokens |
-| lo que escribía por turno | ~370 tokens |
-| herencia sobre el total leído | **56.5%** (198.9M de 351.9M) |
-| en runs de <60 turnos (25 de 31) | **81-85%** |
+| context inherited at start | median **76K**, p90 285K, max 626K |
+| what the run added per turn | ~900 tokens |
+| what it wrote per turn | ~370 tokens |
+| inheritance share of total read | **56.5%** (198.9M of 351.9M) |
+| in runs of <60 turns (25 of 31) | **81-85%** |
 
-O sea: la mayor parte de lo que el modelo leía era conversación previa que esta skill no generó y no necesitaba, releída en cada turno. El `--inline` existe porque el step 5 de run-plan remitía a "solve-task invocada sola" como la herramienta para mirar de cerca una task riesgosa, y sin escape hatch esa capacidad desaparecía del repo.
+That is: most of what the model read was prior conversation that this skill didn't generate and didn't need, re-read on every turn. `--inline` exists because step 5 of run-plan referred to "solve-task invoked on its own" as the tool for taking a close look at a risky task, and without an escape hatch that capability would disappear from the repo.
 
-## Por qué el SKILL.md trae reglas y no porqués (recorte del 2026-09-12)
+## Why SKILL.md carries rules and not whys (2026-09-12 trim)
 
-El `SKILL.md` había llegado a 493 líneas y `REPORT.md` a 153: ~13K tokens que el subagente carga en cada run y relee en cada turno. Un tercio era justificación que ya vivía acá, repetida al lado de cada regla. Se recortó a reglas, y el brief de delegación (`DELEGATE.md`, sólo lo lee el padre) y el step 9.2 (`FEATURE_ENRICH.md`, sólo cuando se completa una feature) salieron a archivos que se leen bajo condición.
+`SKILL.md` had reached 493 lines and `REPORT.md` 153: ~13K tokens that the subagent loads on every run and re-reads on every turn. A third of it was justification that already lived here, repeated next to each rule. It was trimmed to rules, and the delegation brief (`DELEGATE.md`, read only by the parent) and step 9.2 (`FEATURE_ENRICH.md`, only when a feature is completed) moved out to files that are read conditionally.
 
-**Lo que no se consolidó a propósito:** las reglas duras siguen repetidas en cada punto de entrada donde se aplican (task `in-progress` al fallar, líneas `GATE`, headers literales en el step 10 y en `REPORT.md`). Es la decisión previa de "autosuficiencia por sección gana a DRY": quien entra por un step no tiene que reconstruir la regla leyendo otro. Lo que se sacó fue el **porqué** duplicado, no la regla.
+**What was deliberately not consolidated:** the hard rules remain repeated at every entry point where they apply (task `in-progress` on failure, `GATE` lines, literal headers in step 10 and in `REPORT.md`). It is the earlier decision that "self-sufficiency per section beats DRY": whoever enters through a step doesn't have to reconstruct the rule by reading another. What was removed was the duplicated **why**, not the rule.
 
-Los porqués que vivían sólo en el SKILL.md quedan abajo.
+The whys that lived only in SKILL.md follow below.
 
-## Por qué nunca se compara contra `main` literal, y fail closed
+## Why it never compares against a literal `main`, and fails closed
 
-La base es `main`, `master` o `develop` según el proyecto. Comparar contra `main` en un repo con base `master` lee la base como "branch aislada, puedo pushear" y publica directo sobre ella. Sin `branch:` ni `origin/HEAD`, la opción segura es la que no publica: el commit no publica nada. run-plan hace la misma lectura en su Setup, y tiene que coincidir: si una skill asume que la task se commitea y la otra se niega, todo run sobre un repo sin `branch:` muere en su primera task.
+The base is `main`, `master` or `develop` depending on the project. Comparing against `main` in a repo with base `master` reads the base as "isolated branch, I can push" and publishes straight onto it. Without `branch:` or `origin/HEAD`, the safe option is the one that doesn't publish: the commit publishes nothing. run-plan does the same reading in its Setup, and the two have to match: if one skill assumes the task is committed and the other refuses, every run on a repo without `branch:` dies on its first task.
 
-## Por qué el commit va antes de `done`
+## Why the commit goes before `done`
 
-Son los dos estados durables de la skill, uno en git y otro en Meridian. Al revés, cualquier corte entre los dos (hook que aborta, branch inesperada, sesión muerta) deja la task `done` con cero commits: no vuelve a la cola de run-plan —que carga sólo `pending` + `in-progress`—, nunca lleva su trailer `Task:` y `mark_deployed.sh` nunca la mueve a `deployed`. Commiteando primero, el peor caso es una task `in-progress` con el trabajo commiteado: recuperable y visible.
+They are the skill's two durable states, one in git and one in Meridian. The other way around, any cut between the two (aborting hook, unexpected branch, dead session) leaves the task `done` with zero commits: it doesn't return to run-plan's queue —which loads only `pending` + `in-progress`—, never carries its `Task:` trailer, and `mark_deployed.sh` never moves it to `deployed`. Committing first, the worst case is an `in-progress` task with the work committed: recoverable and visible.
 
-## Por qué agrupar llamadas en un turno
+## Why batch calls in one turn
 
-Medido sobre los transcripts de los runners: **21% de los turnos eran una sola llamada sin dependencia del turno anterior** (lecturas de `context_refs` de a una, barridos de grep patrón por patrón, ediciones a archivos distintos en turnos separados). Cada turno reenvía el contexto entero, así que el costo es la cantidad de turnos, no el payload. Detalle en el CHANGELOG.
+Measured over the runners' transcripts: **21% of turns were a single call with no dependency on the previous turn** (reading `context_refs` one at a time, grep sweeps pattern by pattern, edits to different files in separate turns). Each turn resends the entire context, so the cost is the number of turns, not the payload. Details in the CHANGELOG.
 
-## Por qué el step 4 prohíbe sondear el entorno y exige timeout
+## Why step 4 forbids probing the environment and requires a timeout
 
-Sobre 212 transcripts de subagente, **47% de los runs sondeaba el entorno** y era el 14% de todos sus comandos bash; leer la tabla de síntomas cuesta un turno, redescubrirla costaba trece. El timeout: un test colgado (esperando una DB que no está, un `input()` olvidado) nunca falla, y bajo run-plan bloquea al subagente, que bloquea al orquestador — sin output ni diagnóstico. Un test rojo corta una task; uno colgado sin cota cuelga el run entero.
+Across 212 subagent transcripts, **47% of runs probed the environment** and it was 14% of all their bash commands; reading the symptom table costs one turn, rediscovering it cost thirteen. The timeout: a hung test (waiting for a DB that isn't there, a forgotten `input()`) never fails, and under run-plan it blocks the subagent, which blocks the orchestrator — with no output or diagnostic. A red test stops one task; an unbounded hung one hangs the whole run.
 
-## Por qué simplify se limita al diff de la task
+## Why simplify is limited to the task's diff
 
-En un plan de N tasks, si la 003 refactoriza lo que hizo la 001, el commit de la 003 deja de ser atribuible y el trailer `Task:` miente sobre qué cambió. Y el step 5 es el único punto donde mutar no invalida nada: los gates de juicio todavía no corrieron y el determinístico es barato de repetir. Por eso después el código se congela: los gates juzgan lo mismo que se commitea.
+In a plan of N tasks, if 003 refactors what 001 did, 003's commit stops being attributable and the `Task:` trailer lies about what changed. And step 5 is the only point where mutating invalidates nothing: the judgment gates haven't run yet and the deterministic one is cheap to repeat. That is why the code is frozen afterwards: the gates judge the same thing that gets committed.
 
-## Por qué un gate no recibido no es `UNVERIFIABLE`
+## Why a gate not received is not `UNVERIFIABLE`
 
-`UNVERIFIABLE` es un veredicto que el verificador emitió sobre un criterio concreto, y presupone que habló. Si no habló no hay veredicto de ningún tipo, y meterlo en el slot blando del step convierte el modo de fallo en un éxito con asterisco.
+`UNVERIFIABLE` is a verdict the verifier issued on a concrete criterion, and it presupposes that it spoke. If it didn't speak there is no verdict of any kind, and putting it in the step's soft slot turns the failure mode into a success with an asterisk.
 
-## Por qué la divergencia de `writes` no bloquea
+## Why `writes` divergence doesn't block
 
-No hay medición de qué tan preciso es `writes` en la práctica, y un gate sobre una señal sin calibrar rechaza trabajo correcto. El step 8.3 **es** esa medición: acumula divergencias reales, y sólo con ese recall a la vista se decide si el chequeo de overlap de `/meridian-analyze` pasa de informativo a gate.
+There is no measurement of how accurate `writes` is in practice, and a gate on an uncalibrated signal rejects correct work. Step 8.3 **is** that measurement: it accumulates real divergences, and only with that recall in view is it decided whether `/meridian-analyze`'s overlap check goes from informational to gate.
 
-## Por qué el enrichment no lleva sha, GATE ni tests
+## Why the enrichment carries no sha, GATE or tests
 
-El `enrichment` se embebe junto al summary y es lo que rankea la búsqueda semántica del feed. Un texto mitad paths y exit codes responde peor a "¿por qué no tocamos producción en la task del sidebar?", que es justo lo que el feed tiene que poder responder. Y un fallo del enrich no degrada el reporte: la task ya está `done` y commiteada, decir lo contrario mentiría sobre trabajo que sí quedó.
+The `enrichment` is embedded alongside the summary and is what ranks the feed's semantic search. A text that is half paths and exit codes answers worse to "why didn't we touch production in the sidebar task?", which is exactly what the feed has to be able to answer. And an enrich failure doesn't degrade the report: the task is already `done` and committed, and saying otherwise would lie about work that did land.
 
-## Por qué run-plan no pushea en cada task
+## Why run-plan doesn't push on every task
 
-Un push por task publicaría estados intermedios de un plan que todavía puede fallar y cortarse. El run hace un único push al cerrar (su step 7.1).
+A push per task would publish intermediate states of a plan that can still fail and be cut short. The run does a single push on close (its step 7.1).

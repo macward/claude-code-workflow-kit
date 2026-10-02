@@ -138,7 +138,7 @@ Task: <short task_id (8 chars)>
 
 Retain the sha (`git rev-parse --short HEAD`) and the files (`git show --stat --name-only HEAD`): `git add -A` takes **everything** in the tree, including artifacts the task generated unintentionally.
 
-**Push:** only if it committed and the branch is **not** `<base_branch>` (nor indeterminate): `git push -u origin <branch>`. On `<base_branch>` never push — it's what triggers the deploy, and Max triggers it. If the push fails, don't retry blindly: report it and leave the local commit. **Don't open a PR, don't merge, don't create or switch branches.**
+**Push:** only if it committed and the branch is **not** `<base_branch>` (nor indeterminate): `git push -u origin <branch>`. On `<base_branch>` never push — it's what triggers the deploy, and the user triggers it. If the push fails, don't retry blindly: report it and leave the local commit. **Don't open a PR, don't merge, don't create or switch branches.**
 
 ### 6. Mark done
 
@@ -161,7 +161,7 @@ Task <NNN> done ✓
 
 Tests: <command> — <result, e.g. "1809 passed">
 Commit <sha>: <files touched>
-<git line: "Pushed to <branch>." | "Not pushed (Max pushes the base)." | "No changes to commit.">
+<git line: "Pushed to <branch>." | "Not pushed (the user pushes the base)." | "No changes to commit.">
 
 Unverified: code review, goal check and simplify don't run in this skill.
 ```

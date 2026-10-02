@@ -68,7 +68,7 @@ What does decide is the case-by-case reading, the only uncontaminated evidence:
 - **`context` is retired by composition, not by performance.** Its 11.67 average reads are real and aren't the reason: read one by one, the `context` facts in the base are two distinct populations and neither needs the type. One half is **mistyped** — *"Task done auto-closes the issue it came from"* is a textbook gotcha (surprising server behavior + what not to do as a result), *"The CHANGELOG also records changes to `claude/`"* is an explicit owner preference, *"`.meridian` uses feature, not project"* is a fix to a wrong assumption. The other half is **perishable state** — *"2 diagnostic points missing"*, *"pending: structure refactor"*, *"`MERIDIAN_TOOLSETS=admin` enabled in prod"*, *"stitch and pencil removed"*: true when written, ages without notice, and on top ranks high because the type's high average pushes it up. Retiring `context` doesn't lose the first half — it's written as `gotcha` or `preference`, which is what it always was — and takes the second half out of the bundle, which is where it did harm.
 - **`decision` is narrowed instead of retired.** Retiring it entirely leaned on the 1.29 average, which is exactly the number the contaminated measurement can't support. The cases, instead, show a different, fixable problem: most `decision` facts in the base **are already written as a rule elsewhere** — *"solve-task commits the task; run-plan only verifies"* is literally in the Git Policy of `CLAUDE.md` and in `meridian-solve-task/SKILL.md` — or are **feature metadata Meridian already models** (*"feature X has 9 tasks and an SDD"*). The **Don't save** block already forbade both; the type wasn't failing, the filter was applied loosely. What remains is the residue no doc captures: the decision **not** to do something, with its reopening condition (*"code RAG in Meridian: no, until the waste is measured"*). A doc records what was built; nothing records what was discarded or why, and that's exactly what a future session proposes again.
 
-> This is the only deviation from the direction agreed with Max ("keep `gotcha` and `preference`"), and it's deliberate: the part of that direction aimed at `context` was confirmed case by case, and the part aimed at `decision` leaned on an aggregate that turned out invalid. Retiring `decision` remains one line of a table if Max prefers to close it entirely.
+> This is the only deviation from the direction agreed with the user ("keep `gotcha` and `preference`"), and it's deliberate: the part of that direction aimed at `context` was confirmed case by case, and the part aimed at `decision` leaned on an aggregate that turned out invalid. Retiring `decision` remains one line of a table if the user prefers to close it entirely.
 
 **`access_count` is a directional signal, not proof.** It counts bundle appearances, which is popularity induced by the ranking itself (`docs/memory-system.md`). Don't close or reopen this policy with averages: look at the cases.
 
@@ -208,13 +208,13 @@ Shape — the same contract `/meridian-recap` writes, ~20 lines, for an agent re
 ```markdown
 ## Estado — <YYYY-MM-DD>
 
-### Foco actual
+### Current focus
 <what the work is about right now, 1-3 lines>
 
-### Recién terminado
+### Just finished
 - <what closed, with task/issue short ids when the transcript names them>
 
-### Abierto / pendiente
+### Open / pending
 - <what is unfinished, and what the next step is>
 ```
 

@@ -1,161 +1,161 @@
 # SDD Reconcile Command
 
-Reconciliar el SDD original contra la implementación real, antes de archivar la feature. Detecta divergencias, propone resolución por categoría y actualiza el SDD para que refleje la realidad post-implementación.
+Reconcile the original SDD against the real implementation, before archiving the feature. Detects divergences, proposes a resolution per category and updates the SDD so it reflects the post-implementation reality.
 
-## Cuándo usar
+## When to use
 
-Después de `solve-task` / `run-plan` y **antes** de `archive`. La feature está mergeada o lista para mergear; el código existe; el SDD original está congelado en `specs/`.
+After `solve-task` / `run-plan` and **before** `archive`. The feature is merged or ready to merge; the code exists; the original SDD is frozen in `specs/`.
 
-## PROHIBICIONES ESTRICTAS
+## STRICT PROHIBITIONS
 
-- ❌ No archivar la feature (eso lo hace `archive`)
-- ❌ No modificar código de implementación durante este paso (sólo proponer cambios; los aplica `solve-task` si el usuario decide)
-- ❌ No actualizar el SDD sin confirmación explícita por divergencia
+- ❌ Don't archive the feature (that's `archive`'s job)
+- ❌ Don't modify implementation code during this step (only propose changes; `solve-task` applies them if the user decides so)
+- ❌ Don't update the SDD without explicit confirmation per divergence
 
 ## Setup
 
-1. Leer `vibe: <project>` del CLAUDE.md activo.
-2. Identificar el SDD a reconciliar:
-   - Si el usuario pasó nombre como argumento, usarlo.
-   - Si no, listar SDDs activos del proyecto y preguntar.
-3. Identificar el rango de commits de la feature:
-   - Por defecto: commits desde la rama base hasta HEAD.
-   - El usuario puede pasar rango explícito.
+1. Read `vibe: <project>` from the active CLAUDE.md.
+2. Identify the SDD to reconcile:
+   - If the user passed a name as an argument, use it.
+   - If not, list the project's active SDDs and ask.
+3. Identify the feature's commit range:
+   - By default: commits from the base branch to HEAD.
+   - The user can pass an explicit range.
 
-## Proceso
+## Process
 
-### 1. Cargar artefactos
+### 1. Load artifacts
 
 ```
 mcp__meridian__read_doc(project=<project>, folder="specs", filename=<sdd_file>)
 ```
 
-Leer commits relevantes con `git log --oneline <base>..HEAD` y diffs por archivo afectado.
+Read the relevant commits with `git log --oneline <base>..HEAD` and diffs per affected file.
 
-Listar archivos tocados en el rango. Para cada uno, leer el estado actual (no el diff — el resultado final).
+List the files touched in the range. For each one, read the current state (not the diff — the final result).
 
-### 2. Extraer afirmaciones verificables del SDD
+### 2. Extract verifiable claims from the SDD
 
-Identificar afirmaciones del SDD que se pueden contrastar con el código. Categorías:
+Identify SDD claims that can be checked against the code. Categories:
 
-- **Estructurales**: "se crea el módulo X en path Y", "el servicio Z expone método W", "tabla T tiene columnas A,B,C".
-- **Comportamiento**: "el endpoint devuelve 401 si falta token", "función F valida input".
-- **Restricciones**: "MUST", "DEBE", "NO debe", "máximo N".
+- **Structural**: "module X is created at path Y", "service Z exposes method W", "table T has columns A,B,C".
+- **Behavior**: "the endpoint returns 401 if the token is missing", "function F validates input".
+- **Constraints**: "MUST", "MUST NOT", "maximum N".
 
-Ignorar afirmaciones puramente descriptivas o de motivación ("esto resuelve el problema X") — no son verificables.
+Ignore purely descriptive or motivational claims ("this solves problem X") — they're not verifiable.
 
-### 3. Verificar cada afirmación contra el código
+### 3. Verify each claim against the code
 
-Por cada afirmación:
-- Buscar evidencia en el código (path, función, test, schema).
-- Clasificar el resultado en una de 3 categorías:
+For each claim:
+- Look for evidence in the code (path, function, test, schema).
+- Classify the result into one of 3 categories:
 
-| Categoría | Significado |
+| Category | Meaning |
 |---|---|
-| ✅ **Match** | El código refleja la afirmación |
-| ⚠️ **Divergencia accidental** | El código se desvió sin razón documentada (sospecha de bug o atajo) |
-| 🔄 **Divergencia intencional** | El código refleja conocimiento que el SDD no anticipó (la implementación supo más) |
+| ✅ **Match** | The code reflects the claim |
+| ⚠️ **Accidental divergence** | The code drifted with no documented reason (suspected bug or shortcut) |
+| 🔄 **Intentional divergence** | The code reflects knowledge the SDD didn't anticipate (the implementation knew more) |
 
-Heurística para distinguir ⚠️ vs 🔄:
-- Si la divergencia introduce inconsistencia o omite algo del SDD sin justificación → ⚠️.
-- Si la divergencia agrega información, simplifica algo que era innecesariamente complejo, o resuelve un edge case → 🔄.
-- En duda, marcar como 🔄 y dejar que el usuario decida.
+Heuristic to tell ⚠️ from 🔄:
+- If the divergence introduces inconsistency or omits something from the SDD without justification → ⚠️.
+- If the divergence adds information, simplifies something that was needlessly complex, or resolves an edge case → 🔄.
+- When in doubt, mark as 🔄 and let the user decide.
 
-### 4. Presentar reporte
+### 4. Present report
 
 ```
 ## Reconcile Report — <sdd_filename>
-_<fecha> · commits <base>..HEAD_
+_<date> · commits <base>..HEAD_
 
-### ✅ Match (N afirmaciones)
-- "DEBE existir endpoint /healthz sin auth" — verificado en src/api/health.py:12
+### ✅ Match (N claims)
+- "Endpoint /healthz MUST exist without auth" — verified in src/api/health.py:12
 
-### ⚠️ Divergencias accidentales (N)
-- SDD: "tabla `latencies` tiene índice en `(operation, recorded_at)`"
-  Código: índice sólo sobre `operation`
-  Sugerencia: agregar índice compuesto o documentar por qué se omite
+### ⚠️ Accidental divergences (N)
+- SDD: "table `latencies` has an index on `(operation, recorded_at)`"
+  Code: index only on `operation`
+  Suggestion: add composite index or document why it's omitted
 
-### 🔄 Divergencias intencionales (N)
-- SDD: "ObservationService.save retorna {id, path}"
-  Código: retorna {id, path, deduped: bool}
-  Sugerencia: actualizar SDD para reflejar el flag de dedup
+### 🔄 Intentional divergences (N)
+- SDD: "ObservationService.save returns {id, path}"
+  Code: returns {id, path, deduped: bool}
+  Suggestion: update SDD to reflect the dedup flag
 
-### Afirmaciones no verificables (N)
-- "este diseño escala mejor que la alternativa X" — descriptiva, sin acción
+### Unverifiable claims (N)
+- "this design scales better than alternative X" — descriptive, no action
 ```
 
-### 5. Resolver divergencias
+### 5. Resolve divergences
 
-Por cada ⚠️ y 🔄, presentar las opciones al usuario y esperar decisión:
+For each ⚠️ and 🔄, present the options to the user and wait for a decision:
 
 **⚠️ Accidental:**
-- a) Actualizar código para volver al SDD (crea task pending para `solve-task`)
-- b) Documentar como deviation aceptada en `## Deviations` del SDD
-- c) Skip (decidir más tarde)
+- a) Update code to go back to the SDD (creates a pending task for `solve-task`)
+- b) Document as an accepted deviation in `## Deviations` of the SDD
+- c) Skip (decide later)
 
-**🔄 Intencional:**
-- a) Actualizar SDD para reflejar la realidad
-- b) Documentar como deviation explícita en `## Deviations`
+**🔄 Intentional:**
+- a) Update SDD to reflect reality
+- b) Document as an explicit deviation in `## Deviations`
 - c) Skip
 
-No avanzar a paso 6 hasta que todas tengan decisión.
+Don't advance to step 6 until every one has a decision.
 
-### 6. Aplicar updates al SDD
+### 6. Apply updates to the SDD
 
-Por cada decisión que requiere editar el SDD:
+For each decision that requires editing the SDD:
 
-- **Update directo**: modificar el texto del SDD para que matchee el código.
-- **Deviation documentada**: agregar bloque al final del SDD:
+- **Direct update**: modify the SDD text so it matches the code.
+- **Documented deviation**: add a block at the end of the SDD:
 
 ```markdown
 ## Deviations from original spec
 
-### <YYYY-MM-DD> — <título corto>
+### <YYYY-MM-DD> — <short title>
 
-**Original:** <cita exacta del SDD pre-update>
-**Implementación:** <qué hace el código>
-**Razón:** <por qué se aceptó la divergencia>
-**Tipo:** accidental aceptada | intencional
-**Trigger para revisar:** <condición bajo la cual habría que volver al original>
+**Original:** <exact quote from the SDD pre-update>
+**Implementation:** <what the code does>
+**Reason:** <why the divergence was accepted>
+**Type:** accepted accidental | intentional
+**Trigger to revisit:** <condition under which we'd have to go back to the original>
 ```
 
-Persistir el SDD actualizado sobrescribiendo el archivo existente:
+Persist the updated SDD by overwriting the existing file:
 
 ```
 mcp__meridian__create_doc(
   project=<project>,
   folder="specs",
-  filename=<sdd_file>,   # el mismo con el que se leyó, no uno derivado
-  content=<contenido_actualizado>,
+  filename=<sdd_file>,   # the same one it was read with, not a derived one
+  content=<updated_content>,
   upsert=True
 )
 ```
 
-`upsert=True` es obligatorio: el CRUD genérico es create-only por defecto, así que sin él esto falla con `DocumentAlreadyExistsError` en vez de sobrescribir. Y el `filename` va explícito porque, omitido, se deriva del H1 del documento y puede no coincidir con el nombre del SDD que se está reconciliando — con lo cual crearía uno nuevo al lado en vez de actualizar el que se leyó.
+`upsert=True` is mandatory: the generic CRUD is create-only by default, so without it this fails with `DocumentAlreadyExistsError` instead of overwriting. And `filename` is explicit because, if omitted, it's derived from the document's H1 and may not match the name of the SDD being reconciled — which would create a new one alongside instead of updating the one that was read.
 
-### 7. Verificación final
+### 7. Final verification
 
-Después de aplicar updates, presentar resumen:
+After applying updates, present a summary:
 
 ```
 ## Reconcile Complete
 
 - Match:                 N
-- Divergencias resueltas: N
-  - Updates al SDD:       N
-  - Deviations documentadas: N
-  - Tasks pending creadas: N
+- Divergences resolved:  N
+  - SDD updates:          N
+  - Documented deviations: N
+  - Pending tasks created: N
 - Skipped:               N
 
-SDD actualizado: <path>
+SDD updated: <path>
 ```
 
-Si quedan items en "Skipped", advertir que la reconciliación es parcial y NO se debería archivar la feature hasta cerrarlos.
+If items remain in "Skipped", warn that the reconciliation is partial and the feature should NOT be archived until they're closed.
 
-## Reglas
+## Rules
 
-1. Es un comando interactivo — espera decisión por divergencia. No autoresolver.
-2. ⚠️ y 🔄 son heurísticas, el usuario tiene la palabra final.
-3. Nunca borrar contenido del SDD original — sólo modificar afirmaciones específicas o agregar deviations.
-4. Si no hay divergencias, decirlo: "✓ Sin divergencias. SDD refleja la implementación. Listo para archivar."
-5. Si el SDD no existe o no está identificable, fallar explícitamente — no inventar uno.
+1. It's an interactive command — wait for a decision per divergence. Don't auto-resolve.
+2. ⚠️ and 🔄 are heuristics, the user has the final say.
+3. Never delete content from the original SDD — only modify specific claims or add deviations.
+4. If there are no divergences, say so: "✓ No divergences. SDD reflects the implementation. Ready to archive."
+5. If the SDD doesn't exist or isn't identifiable, fail explicitly — don't invent one.
