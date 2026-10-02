@@ -1,7 +1,7 @@
 # SwiftLint base for new Swift projects. Copied by DeadCode's "Configure Claude for Project…"
 # wizard to the project root as `.swiftlint.yml`.
 #
-# Only safety and size/complexity rules: the cosmetic ones are left to the formatter.
+# Only safety and size/complexity rules: cosmetic rules are off on purpose.
 # Project-specific rules (e.g. which module may import what) go in `custom_rules` per project.
 
 excluded:
