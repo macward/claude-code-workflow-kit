@@ -5,7 +5,8 @@
 View → ViewModel (when needed) → Store / Service
 
 Each piece exists only when it has a job. Don't add a layer to complete the chain:
-a view that only reads a store talks to the store.
+a view that only reads a store talks to the store. A package without views starts at
+Store / Service.
 
 ### Roles
 
@@ -31,17 +32,19 @@ When to use one (apps): see 4 - Using ViewModels.
 
 ### Dependency Injection
 
-- ALWAYS use @Environment for sharing stores and services across views
+- Apps only: ALWAYS use @Environment for sharing stores and services across views, and inject
+  dependencies at the App root level
 - NEVER use singletons or shared instances. Exception: stateless, thread-safe caches such as
   formatters (`static let dateFormatter`); say so in a comment
-- Inject dependencies at the App root level
-- ViewModels receive dependencies via init injection
+- ViewModels, stores and services receive dependencies via init injection. A package exposes
+  initializers and leaves wiring to the app that uses it
 
 ### Concurrency
 
 - App targets use default `MainActor` isolation (`SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`,
   the Xcode 26 app default). Don't write `@MainActor` in an app target: everything already is.
-  Packages without default isolation mark UI-bound types `@MainActor` explicitly
+  Packages read their isolation from each target's `swiftSettings` in `Package.swift`; without
+  `.defaultIsolation(MainActor.self)` they mark UI-bound types `@MainActor` explicitly
 - Types that do blocking I/O or heavy work are `nonisolated`. Repeat `nonisolated` on every
   member declared in an extension, including protocol conformances: the type's modifier doesn't
   reach them, and the mistake crashes at runtime (`dispatch_assert_queue`) with no compiler warning
@@ -60,6 +63,7 @@ When to use one (apps): see 4 - Using ViewModels.
 - The type the view calls (ViewModel or store) catches errors and exposes them as state
 - Views react to error state; they don't catch
 - Work that runs without a screen logs its errors and records them in its own state
+- A package's public API throws; the app that calls it decides how to present the error
 
 ### Patterns to Avoid
 

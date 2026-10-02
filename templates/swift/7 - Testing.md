@@ -3,7 +3,7 @@
 ### Framework
 
 - Unit tests: Swift Testing (`@Test`)
-- UI tests and performance tests (`measure(metrics:)`): XCTest, which Swift Testing doesn't cover
+- Performance tests (`measure(metrics:)`) and UI tests: XCTest, which Swift Testing doesn't cover
 
 ### Naming
 
@@ -13,7 +13,8 @@
 ### Test doubles
 
 - Add a protocol only at a real I/O seam a test must replace (network, process, clock, filesystem)
-- Otherwise test the concrete type, with an in-memory `ModelContainer` or a temp directory
+- Otherwise test the concrete type, with a temp directory or, with SwiftData, an in-memory
+  `ModelContainer`
 - Doubles are written by hand; do NOT use mocking libraries
 - An object kept alive only by a `[weak self]` observer dies right after `init` in a test;
   hold it with `withExtendedLifetime`
@@ -34,6 +35,8 @@
 - Do NOT test private implementation details
 
 ### UI Testing
+
+Only if the project has a UI test target (apps). Packages don't have one.
 
 - Framework: XCUITest (`XCTestCase`)
 - Test user-facing flows end-to-end, not individual views

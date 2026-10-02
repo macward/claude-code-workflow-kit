@@ -19,12 +19,12 @@ Location: .claude/templates/swift/ (repo: `templates/swift/`)
 They live in `templates/` and not in `rules/` **on purpose**: everything under `.claude/rules/` is loaded into the context of every turn of every project, and these rules only apply to Swift projects. Read them with `Read` when the detection above gives Swift; don't move them back to `rules/`.
 
 **Always include:**
-- 0 - Tech Stack.md
 - 1- Architecture and Patterns.md
 - 6 - Coding Styles.md
 - 7 - Testing.md
 
 **Swift App only** (has .xcodeproj or .xcworkspace):
+- 0 - Tech Stack (App).md
 - 2 - Project Structure (iOS-Visionos-macOS).md
 - 4 - Using ViewModels.md
 - 5 - Atomic Design.md
@@ -39,6 +39,7 @@ Before laying out the project structure, read in Meridian `deadcode-app/architec
 ```
 
 **Swift Package only** (Package.swift without .xcodeproj):
+- 0 - Tech Stack (Package).md
 - 3 - Swift Library Package Structure.md
 
 ### Python Rules

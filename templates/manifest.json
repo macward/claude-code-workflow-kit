@@ -2,7 +2,8 @@
   "schemaVersion": 1,
   "swift": {
     "rules": [
-      "0 - Tech Stack.md",
+      "0 - Tech Stack (App).md",
+      "0 - Tech Stack (Package).md",
       "1- Architecture and Patterns.md",
       "2 - Project Structure (iOS-Visionos-macOS).md",
       "3 - Swift Library Package Structure.md",
@@ -14,7 +15,7 @@
     ],
     "defaults": {
       "iOSApp": [
-        "0 - Tech Stack.md",
+        "0 - Tech Stack (App).md",
         "1- Architecture and Patterns.md",
         "2 - Project Structure (iOS-Visionos-macOS).md",
         "4 - Using ViewModels.md",
@@ -24,7 +25,7 @@
         "8 - App Composition.md"
       ],
       "macOSApp": [
-        "0 - Tech Stack.md",
+        "0 - Tech Stack (App).md",
         "1- Architecture and Patterns.md",
         "2 - Project Structure (iOS-Visionos-macOS).md",
         "4 - Using ViewModels.md",
@@ -34,7 +35,7 @@
         "8 - App Composition.md"
       ],
       "swiftPackage": [
-        "0 - Tech Stack.md",
+        "0 - Tech Stack (Package).md",
         "1- Architecture and Patterns.md",
         "3 - Swift Library Package Structure.md",
         "6 - Coding Styles.md",
