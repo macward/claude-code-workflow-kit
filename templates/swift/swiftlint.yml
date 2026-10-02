@@ -1,0 +1,23 @@
+# SwiftLint base for new Swift projects. Copied by DeadCode's "Configure Claude for Project…"
+# wizard to the project root as `.swiftlint.yml`.
+#
+# Only safety and size/complexity rules: the cosmetic ones are left to the formatter.
+# Project-specific rules (e.g. which module may import what) go in `custom_rules` per project.
+
+excluded:
+  - .build
+  - DerivedData
+  - build
+
+only_rules:
+  - force_cast
+  - force_try
+  - force_unwrapping
+  - file_length
+  - function_body_length
+  - type_body_length
+  - cyclomatic_complexity
+  - custom_rules
+
+file_length:
+  warning: 400

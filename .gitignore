@@ -1,1 +1,9 @@
 .DS_Store
+
+# Symlinks created by install.sh (absolute paths, machine-specific)
+.claude/skills/
+.claude/agents/
+.claude/commands/
+.claude/rules/
+.claude/templates/
+.claude/settings.local.json
