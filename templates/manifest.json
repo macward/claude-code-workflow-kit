@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "swift": {
+    "rules": [
+      "0 - Tech Stack.md",
+      "1- Architecture and Patterns.md",
+      "2 - Project Structure (iOS-Visionos-macOS).md",
+      "3 - Swift Library Package Structure.md",
+      "4 - Using ViewModels.md",
+      "5 - Atomic Design.md",
+      "6 - Coding Styles.md",
+      "7 - Testing.md",
+      "8 - App Composition.md"
+    ],
+    "defaults": {
+      "iOSApp": [
+        "0 - Tech Stack.md",
+        "1- Architecture and Patterns.md",
+        "2 - Project Structure (iOS-Visionos-macOS).md",
+        "4 - Using ViewModels.md",
+        "5 - Atomic Design.md",
+        "6 - Coding Styles.md",
+        "7 - Testing.md",
+        "8 - App Composition.md"
+      ],
+      "macOSApp": [
+        "0 - Tech Stack.md",
+        "1- Architecture and Patterns.md",
+        "2 - Project Structure (iOS-Visionos-macOS).md",
+        "4 - Using ViewModels.md",
+        "5 - Atomic Design.md",
+        "6 - Coding Styles.md",
+        "7 - Testing.md",
+        "8 - App Composition.md"
+      ],
+      "swiftPackage": [
+        "0 - Tech Stack.md",
+        "1- Architecture and Patterns.md",
+        "3 - Swift Library Package Structure.md",
+        "6 - Coding Styles.md",
+        "7 - Testing.md"
+      ]
+    },
+    "guides": [
+      "CLAUDE.md SWIFT.md",
+      "CLAUDE.md Structure for iOS Projects.md"
+    ],
+    "swiftlint": "swiftlint.yml"
+  },
+  "python": {
+    "rules": [
+      "Coding Rules.md"
+    ],
+    "defaults": {
+      "pythonCLI": [
+        "Coding Rules.md"
+      ]
+    },
+    "guides": []
+  }
+}
